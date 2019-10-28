@@ -218,5 +218,5 @@ setup(
                 ]
     },
     packages         = ["pyion"],
-    ext_modules      = _ext_modules
+    ext_modules      = [] # TO BE ABLE TO COMPILE DOCUMENTATION
 )
