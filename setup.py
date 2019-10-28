@@ -207,11 +207,16 @@ setup(
     url              = 'https://github.com/msancheznet/pyion',
     python_requires  = '>=3.5.0',
     setup_requires   = [],
-    install_requires = [],
+    install_requires = ['setuptools'],
     extras_require   = {
                 'test': [],
                 'docs': ['sphinx', 'sphinx_bootstrap_theme'],
             },
+    entry_points     = {
+                'sphinx.html_themes': [
+                    'bootstrap = sphinx_bootstrap_theme',
+                ]
+    },
     packages         = ["pyion"],
     ext_modules      = []   # DO NOT COMPILE EXTENSIONS FOR DOCUMENTATION
 )
