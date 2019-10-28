@@ -21,7 +21,7 @@ formats: all
 
 python:
   install:
-    - method: setuptools
+    - method: pip
       path: .
       extra_requirements:
         - tests
