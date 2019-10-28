@@ -23,6 +23,6 @@ python:
   install:
     - method: setuptools
       path: .
-  extra_requirements:
-    - tests
-    - docs
+      extra_requirements:
+        - tests
+        - docs
