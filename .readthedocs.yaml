@@ -22,4 +22,4 @@ formats: all
 python:
   install:
     - method: setuptools
-      path: pyion
+      path: .
