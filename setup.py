@@ -213,5 +213,5 @@ setup(
                 'docs': ['sphinx', 'sphinx_bootstrap_theme'],
             },
     packages         = ["pyion"],
-    ext_modules      = _ext_modules
+    ext_modules      = []   # DO NOT COMPILE EXTENSIONS FOR DOCUMENTATION
 )
