@@ -15,6 +15,7 @@ The list of functions provided to interact with BP are:
 - List all known endpoints.
 
 The list of functions provided to interact with LTP are:
+
 - Check if an LTP span exists.
 - (Not fully implemented) Obtain information about an LTP span.
 - (Not fully implemented) Update the configuration of an LTP Span

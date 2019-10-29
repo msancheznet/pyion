@@ -11,10 +11,12 @@
 """
 
 # General imports
+from mock import Mock
 import os
 from pathlib import Path
 import signal
 from time import sleep
+from warnings import warn
 
 # Module imports
 import pyion
@@ -26,9 +28,13 @@ import pyion.ltp as ltp
 import pyion.mem as mem
 
 # Import C Extensions
-import _bp
-import _cfdp
-import _ltp
+try:
+    import _bp
+    import _cfdp
+    import _ltp
+except ImportError:
+    warn('_bp, _ltp, _cfdp extensions not available. Using mock instead.')
+    _bp, _ltp, _cfdp = Mock(), Mock(), Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = ['get_bp_proxy', 'get_cfdp_proxy', 'get_ltp_proxy', 'get_sdr_proxy',
