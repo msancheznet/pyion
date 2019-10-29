@@ -4,9 +4,19 @@ Interface with the CCSDS File Delivery Protocol (CFDP)
 **pyion** provides two main abstraction to send/request files through CFDP:
 
 - **CfdpProxy**: Proxy to CFDP engine of ION. You should always obtain these type of proxies by calling ``pyion.get_cfdp_proxy``.
-- **Entity**: Entity that you can use to send/request files. You can also register event handlers to for specific CFDP events.
+- **Entity**: Entity that you can use to send/request files. You can also register event handlers to for specific CFDP events. Entities can also be used to send commands to remote engines (e.g. delete/rename file, wait for a file).
 
-Entities can also be used to send commands to remote engines (e.g. delete/rename file, wait for a file).
+Event handlers are defined in pyion as functions that must be registered through the Entity object (see example below). You can defined different handlers for specific events, or a single handler for all events. In either case, the expected function signature for the event handler is
+
+.. code-block:: python
+    :linenos:
+
+    def ev_handler(ev_type, ev_params):
+      pass
+
+``ev_type`` indicates the type of event that is being processed. In turn, ``ev_params`` is a dictionary with the parameters inherent to this event type. You can find their definition in pyion's source code (see ``_cfdp.c`` file), or in the CFDP Blue Book available at https://public.ccsds.org/Publications/BlueBooks.aspx. Finally, for convenience, the list of available CFDP events is provided in the ``constants`` module within pyion.
+
+Finally, and assuming that CFDP transactions are performed one at a time, the Entity object provides a convenience method ``wait_for_transaction_end`` that blocks the current thread of execution until the receiver has obtained confirmation that the CFDP transaction was successful (or not). This waiting mechanism **only** works if one transaction is active at any point in time. Otherwise, there is no easy way to differentiate which of *N* concurrent transactions finished.
 
 CFDP Example: Transmitter
 -------------------------

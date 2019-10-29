@@ -40,7 +40,8 @@
  * 
  * Author: Marc Sanchez Net
  * Date:   4/15/2019
- * Copyright (c) 2019, Jet Propulsion Laboratory
+ * Copyright (c) 2019, California Institute of Technology ("Caltech").  
+ * U.S. Government sponsorship acknowledged.
  * =========================================================================== */
 
 #include <stdio.h>

@@ -3,11 +3,10 @@
 # Interface between the ION's implementation of the CCSDS LTP and Python. 
 # Internally, all classes call the C Extension _ltp.
 #
-# For detailed documentation, see __init__.py
-#
 # Author: Marc Sanchez Net
 # Date:   05/30/2019
-# Copyright (c) 2019, Jet Propulstion Laboratory
+# Copyright (c) 2019, California Institute of Technology ("Caltech").  
+# U.S. Government sponsorship acknowledged.
 # ===========================================================================
 """
 

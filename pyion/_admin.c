@@ -3,7 +3,8 @@
  * 
  * Author: Marc Sanchez Net
  * Date:   08/21/2019
- * Copyright (c) 2019, Jet Propulsion Laboratory
+ * Copyright (c) 2019, California Institute of Technology ("Caltech").  
+ * U.S. Government sponsorship acknowledged.
  * =========================================================================== */
 
 // ION Public API includes
