@@ -4,9 +4,9 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = DtnSim
-SOURCEDIR     = source
-BUILDDIR      = build
+SPHINXPROJ    = pyion
+SOURCEDIR     = .
+BUILDDIR      = .
 
 # Put it first so that "make" without argument is like "make help".
 help:
