@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyion's documentation!
-==================================
+pyion: A Python Extension for the Interplanetary Overlay Network
+================================================================
 
 .. Above is the document title, and below is the subtitle.
    They are transformed from section titles after parsing.
@@ -19,8 +19,7 @@ Welcome to pyion's documentation!
 :Release: |release|
 
 :Abstract:
-	``pyion`` is provides a set of Python C extensions that interface with the Interplanetary Overlay Network (ION),
-    JPL's implementation of the Delay Tolerant Networking (DTN) protocol stack.
+	``pyion`` is provides a set of Python C extensions that interface with the Interplanetary Overlay Network (ION), JPL's implementation of the Delay Tolerant Networking (DTN) protocol stack.
 
 .. meta::
    :keywords: Delay Tolerant Networking
@@ -76,11 +75,13 @@ Installation Instructions
 =========================
 
 ``Pyion`` is currently not hosted in any Python repository (e.g., pip, conda) because installation of the package is only possible in computers where ION is already available. However, installing it is as simple as downloading the package and then, in a terminal, running
-```
-$ cd /pyion
-$ export ION_HOME=/......
-$ python3 setup.py install
-```
+
+.. code-block:: bash
+    :linenos:
+
+    cd /pyion
+    export ION_HOME=/......
+    python3 setup.py install
 
 The environment variable ``$ION_HOME`` should ideally be set to the base path where ION is installed, although it this is not mandatory. In fact, if not available, pyion will still be installed but all administrative/management functionality will not be available (e.g., ability to query/modify a contact plan directly from Python).
 
@@ -99,19 +100,19 @@ Multiple ION Nodes in a Single Host
 ===================================
 
 If multiple instances of ION are running on the same host, each one with its own node number, then ``ION_NODE_LIST_DIR`` environment variable needs to be defined (see the ION manual for further details). This can be done from Python by simply calling
-```python
-import pyion
 
-# Set ION environment variable
-pyion.ION_NODE_LIST_DIR = '/<desired path>/nodes'
-```
+.. code-block:: python
+    :linenos:
+    
+    import pyion
+    pyion.ION_NODE_LIST_DIR = '/<desired path>/nodes'
 
 Copyright and Licensing
 =======================
 
 Copyright (c) 2019, California Institute of Technology ("Caltech").  U.S. Government sponsorship acknowledged.
 
-``Pyion`` is currently an open-source package distributed under the Apache 2.0 license.
+``pyion`` is currently an open-source package distributed under the Apache 2.0 license.
 
 Disclaimers
 -----------
@@ -125,11 +126,13 @@ Contents
    :maxdepth: 3
    :numbered:
 
+   index.rst
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
    Admin_Interface.rst
    Mem_Interface.rst
+   Reference_Guide.rst
    License.rst
 
 

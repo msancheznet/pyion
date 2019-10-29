@@ -1,7 +1,12 @@
 Interface with ION's Memory/Storage
 ===================================
 
-ION's memory is divided in two parts, the Personal Space Management (PSM) and the Simple Data Recorder (SDR). The state of both the PSM and the SDR can be directly queried from pyion through the PsmProxy and SdrProxy, both of which are still experimental at this point. The following example demonstrate how to use both while sending bundles through an endpoint:
+ION's memory is divided in two parts, the Personal Space Management (PSM) and the Simple Data Recorder (SDR). The state of both the PSM and the SDR can be directly queried from pyion through the PsmProxy and SdrProxy, both of which are still experimental at this point. 
+
+Utilization of the PSM or SDR proxies works in a similar manner. The user starts a monitoring session during which the state of the system will be quiered at regular intervals as defined by the sampling rate (in Hz). Once the user has collected all necessary information, then both proxies must call ``stop_monitoring``, a function that returns a dictionary of dictionaries, where the outer layer corresponds to the variable being monitored (e.g., ``small_pool``, ``large_pool``, ``summary``, etc.) and the inner layer is a time index from the start of the monitoring sessions. This data can be then processed in tabular format using well-known data science libraries such as Pandas.
+
+Example: Monitoring Session at Transmitter
+------------------------------------------
 
 .. code-block:: python
     :linenos:
@@ -27,3 +32,4 @@ ION's memory is divided in two parts, the Personal Space Management (PSM) and th
     # Get results
     sdr_res = sdr.stop_monitoring()
     psm_res = psm.stop_monitoring()
+
