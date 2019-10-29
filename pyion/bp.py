@@ -3,11 +3,10 @@
 # Interface between the ION's implementation of the Bundle Protocol and Python. 
 # Internally, all classes call the C Extension _bp.
 #
-# For detailed documentation, see __init__.py
-#
 # Author: Marc Sanchez Net
 # Date:   04/17/2019
-# Copyright (c) 2019, Jet Propulstion Laboratory
+# Copyright (c) 2019, California Institute of Technology ("Caltech").  
+# U.S. Government sponsorship acknowledged.
 # ===========================================================================
 """
 
