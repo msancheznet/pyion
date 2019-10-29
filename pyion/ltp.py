@@ -11,15 +11,21 @@
 """
 
 # General imports
+form mock import Mock
 from pathlib import Path
 from threading import Event, Thread
+from warnings import warn
 
 # Module imports
 import pyion
 import pyion.utils as utils
 
 # Import C Extension
-import _ltp
+try:
+	import _ltp
+except ImportError:
+	warn('_ltp extension not available. Using mock instead.')
+	_ltp = Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = ['AccessPoint']

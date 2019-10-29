@@ -11,10 +11,16 @@
 
 # Generic imports
 from enum import IntEnum, unique
+from mock import Mock
+from warnings import warn
 
 # Import C Extensions
-import _bp
-import _cfdp
+try:
+    import _bp
+    import _cfdp
+except ImportError:
+    warn('_bp, _cfdp extensions not available. Using mock instead.')
+    _bp, _cfdp = Mock(), Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = [
@@ -61,16 +67,16 @@ class BpEcsEnumeration(IntEnum):
         - BP_RELIABLE: Send using a reliable convergence layer
         - BP_RELIABLE_STREAMING: BP_BEST_EFFORT | BP_RELIABLE
     """
-    BP_MINIMUM_LATENCY    = _bp.BP_MINIMUM_LATENCY	
-    BP_BEST_EFFORT     	  = _bp.BP_BEST_EFFORT		
+    BP_MINIMUM_LATENCY    = _bp.BP_MINIMUM_LATENCY  
+    BP_BEST_EFFORT        = _bp.BP_BEST_EFFORT      
     BP_FLOW_LABEL_PRESENT = _bp.BP_FLOW_LABEL_PRESENT 
-    BP_RELIABLE    		  = _bp.BP_RELIABLE			
+    BP_RELIABLE           = _bp.BP_RELIABLE         
     BP_RELIABLE_STREAMING = _bp.BP_RELIABLE_STREAMING
 
 @unique
 class BpReportsEnum(IntEnum):
     """ BP reports enumeration. See ``help(BpReportsEnum)`` """
-    BP_NO_RPTS 	     = 0
+    BP_NO_RPTS       = 0
     BP_RECEIVED_RPT  = _bp.BP_RECEIVED_RPT
     BP_CUSTODY_RPT   = _bp.BP_CUSTODY_RPT
     BP_FORWARDED_RPT = _bp.BP_FORWARDED_RPT
@@ -80,7 +86,7 @@ class BpReportsEnum(IntEnum):
 @unique
 class BpAckReqEnum(IntEnum):
     """ BP application acknowledgement enumeration. See ``help(BpAckReqEnum)`` """
-    BP_ACK_REQ	  = True
+    BP_ACK_REQ    = True
     BP_NO_ACK_REQ = False
 
 # ============================================================================
@@ -140,18 +146,18 @@ class CfdpFileStoreEnum(IntEnum):
 @unique
 class CfdpEventEnum(IntEnum):
     """ CFDP event types. See ``help(CfdpEventEnum)`` and Section 3.5.6 of CCSDS CFDP """
-    CFDP_NO_EVENT 				  = _cfdp.CfdpNoEvent
-    CFDP_TRANSACTION_IND 		  = _cfdp.CfdpTransactionInd
-    CFDP_EOF_SENT_IND 			  = _cfdp.CfdpEofSentInd
+    CFDP_NO_EVENT                 = _cfdp.CfdpNoEvent
+    CFDP_TRANSACTION_IND          = _cfdp.CfdpTransactionInd
+    CFDP_EOF_SENT_IND             = _cfdp.CfdpEofSentInd
     CFDP_TRANSACTION_FINISHED_IND = _cfdp.CfdpTransactionFinishedInd
-    CFDP_METADATA_RECV_IND 		  = _cfdp.CfdpMetadataRecvInd
-    CFDP_FILE_SEGMENT_IND 		  = _cfdp.CfdpFileSegmentRecvInd
-    CFDP_EOF_RECV_IND 			  = _cfdp.CfdpEofRecvInd
-    CFDP_SUSPENDED_IND 			  = _cfdp.CfdpSuspendedInd
-    CFDP_RESUMED_IND 			  = _cfdp.CfdpResumedInd
-    CFDP_REPORT_IND 			  = _cfdp.CfdpReportInd
-    CFDP_FAULT_IND 				  = _cfdp.CfdpFaultInd
-    CFDP_ABANDONED_IND 			  = _cfdp.CfdpAbandonedInd
+    CFDP_METADATA_RECV_IND        = _cfdp.CfdpMetadataRecvInd
+    CFDP_FILE_SEGMENT_IND         = _cfdp.CfdpFileSegmentRecvInd
+    CFDP_EOF_RECV_IND             = _cfdp.CfdpEofRecvInd
+    CFDP_SUSPENDED_IND            = _cfdp.CfdpSuspendedInd
+    CFDP_RESUMED_IND              = _cfdp.CfdpResumedInd
+    CFDP_REPORT_IND               = _cfdp.CfdpReportInd
+    CFDP_FAULT_IND                = _cfdp.CfdpFaultInd
+    CFDP_ABANDONED_IND            = _cfdp.CfdpAbandonedInd
     CFDP_ALL_IND                  = 100
 
 @unique

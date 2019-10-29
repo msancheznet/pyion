@@ -11,9 +11,11 @@
 """
 
 # General imports
+from mock import Mock
 import os
 from pathlib import Path
 from threading import Thread
+from warnings import warn
 
 # Module imports
 import pyion
@@ -21,7 +23,11 @@ import pyion.utils as utils
 from pyion.constants import BpEcsEnumeration
 
 # Import C Extension
-import _bp
+try:
+	import _bp
+except ImportError:
+	warn('_bp extension not available. Using mock instead.')
+	_bp = Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = ['Endpoint']

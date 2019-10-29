@@ -12,14 +12,20 @@
 # Generic imports
 import abc
 from collections import defaultdict
+from mock import Mock
 from threading import Thread
 import time
+from warnings import warn
 
 # Import pyion modules
 import pyion.utils as utils
 
 # Import C Extension
-import _mem
+try:
+	import _mem
+except ImportError:
+	warn('_mem extension not available. Using mock instead.')
+	_mem = Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = ['SdrProxy', 'PsmProxy']

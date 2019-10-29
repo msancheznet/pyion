@@ -11,8 +11,10 @@
 """
 
 # General imports
+from mock import Mock
 from pathlib import Path
 from threading import Event, Thread
+from warnings import warn
 
 # Module imports
 import pyion
@@ -20,7 +22,11 @@ import pyion.utils as utils
 from pyion.constants import CfdpEventEnum
 
 # Import C Extension
-import _cfdp
+try:
+	import _cfdp
+except ImportError:
+	warn('_cfdp extension not available. Using mock instead.')
+	_cfdp = Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = ['Entity']
