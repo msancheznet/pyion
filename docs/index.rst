@@ -17,6 +17,7 @@ pyion: A Python Extension for the Interplanetary Overlay Network
 :Contact: marc.sanchez.net@jpl.nasa.gov
 :Organization: Jet Propulsion Laboratory (JPL)
 :Release: |release|
+:Repository: https://github.com/msancheznet/pyion
 
 :Abstract:
 	``pyion`` is provides a set of Python C extensions that interface with the Interplanetary Overlay Network (ION), JPL's implementation of the Delay Tolerant Networking (DTN) protocol stack.
