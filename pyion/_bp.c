@@ -160,7 +160,7 @@ PyMODINIT_FUNC PyInit__bp(void) {
     PyModule_AddIntMacro(module, BP_DELETED_RPT);
     PyModule_AddIntMacro(module, BP_MINIMUM_LATENCY);
     PyModule_AddIntMacro(module, BP_BEST_EFFORT);
-    PyModule_AddIntMacro(module, BP_FLOW_LABEL_PRESENT);
+    // PyModule_AddIntMacro(module, BP_FLOW_LABEL_PRESENT); Not valid in IONv3.7.0
     PyModule_AddIntMacro(module, BP_RELIABLE);
     PyModule_AddIntMacro(module, BP_RELIABLE_STREAMING);
     PyModule_AddIntConstant(module, "NoCustodyRequested", NoCustodyRequested);
