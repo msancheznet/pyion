@@ -11,7 +11,7 @@
 """
 
 # General imports
-form mock import Mock
+from unittest.mock import Mock
 from pathlib import Path
 from threading import Event, Thread
 from warnings import warn

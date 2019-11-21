@@ -11,7 +11,7 @@
 
 # Generic imports
 from enum import IntEnum, unique
-from mock import Mock
+from unittest.mock import Mock
 from warnings import warn
 
 # Import C Extensions

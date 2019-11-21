@@ -12,7 +12,7 @@
 # Generic imports
 import abc
 from collections import defaultdict
-from mock import Mock
+from unittest.mock import Mock
 from threading import Thread
 import time
 from warnings import warn

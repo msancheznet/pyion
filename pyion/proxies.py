@@ -11,7 +11,7 @@
 """
 
 # General imports
-from mock import Mock
+from unittest.mock import Mock
 import os
 from pathlib import Path
 import signal

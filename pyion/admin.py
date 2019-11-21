@@ -10,7 +10,7 @@
 """
 
 # General imports
-from mock import Mock
+from unittest.mock import Mock
 from warnings import warn
 
 # pyion imports
