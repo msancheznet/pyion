@@ -17,10 +17,15 @@ from warnings import warn
 # Import C Extensions
 try:
     import _bp
+except ImportError:
+    warn('_bp extension not available. Using mock instead.')
+    _bp = Mock()
+
+try:
     import _cfdp
 except ImportError:
-    warn('_bp, _cfdp extensions not available. Using mock instead.')
-    _bp, _cfdp = Mock(), Mock()
+    warn('_cfdp extension not available. Using mock instead.')
+    _cfdp = Mock()
 
 # Define all methods/vars exposed at pyion
 __all__ = [
@@ -63,13 +68,11 @@ class BpEcsEnumeration(IntEnum):
     
         - BP_MINIMUM_LATENCY: Forward bundle on all routes
         - BP_BEST_EFFORT: Send using an unreliable convergence layer
-        - BP_FLOW_LABEL_PRESENT: Ignore flow label if 0
         - BP_RELIABLE: Send using a reliable convergence layer
         - BP_RELIABLE_STREAMING: BP_BEST_EFFORT | BP_RELIABLE
     """
     BP_MINIMUM_LATENCY    = _bp.BP_MINIMUM_LATENCY  
     BP_BEST_EFFORT        = _bp.BP_BEST_EFFORT      
-    BP_FLOW_LABEL_PRESENT = _bp.BP_FLOW_LABEL_PRESENT
     BP_RELIABLE           = _bp.BP_RELIABLE         
     BP_RELIABLE_STREAMING = _bp.BP_RELIABLE_STREAMING
 

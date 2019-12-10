@@ -10,8 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cfdp.h>
 #include <Python.h>
+
+#include <cfdp.h>
+#include <bputa.h>
 
 /* ============================================================================
  * === _cfdp module definitions
@@ -328,7 +330,7 @@ static PyObject *pyion_cfdp_add_fs_req(PyObject *self, PyObject *args) {
 
 static int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
 			unsigned int length, int sourceFileFd, char *buffer) {
-	writeTimestampLocal(getUTCTime(), buffer);
+	writeTimestampLocal(getCtime(), buffer);
 	return strlen(buffer) + 1;
 }
 

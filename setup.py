@@ -62,8 +62,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-3.6.2'
-__release__ = 'R2019c'
+__version__ = 'pyion-3.7.0'
+__release__ = 'R2019d'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -162,7 +162,7 @@ _bp = Extension('_bp',
 
 # Define the ION-CFDP extension and related directories
 _cfdp = Extension('_cfdp',
-                include_dirs=[str(ion_inc)],
+                include_dirs=[str(ion_inc), str(cfdp_path)],    # NEED TO IMPORT PRIVATE API? THIS IS BUG
                 libraries=['cfdp', 'ici'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_cfdp.c'],

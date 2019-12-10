@@ -348,6 +348,7 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
 
     // Define variables
     PsmAddress	xaddr;
+    int regionIdx;
     uvast fromNode, toNode;
     time_t fromTime, toTime;
     char *fromTimeStr;
@@ -357,8 +358,8 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
     int ok;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "KKssIf", (unsigned long long *)&fromNode, (unsigned long long *)&toNode,
-                        &fromTimeStr, &toTimeStr, &xmitRate, &confidence))
+    if (!PyArg_ParseTuple(args, "iKKssIf", (int*) &regionIdx, (unsigned long long *)&fromNode, 
+                        (unsigned long long *)&toNode, &fromTimeStr, &toTimeStr, &xmitRate, &confidence))
         return NULL;
 
     // Parse the timestamps
@@ -375,8 +376,15 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
         return NULL;
     }
 
+    // Pick the region (home or outer. See ionrc manual)
+    int rid = ionPickRegion(regionIdx);
+    if (rid > 1) {
+        pyion_SetExc(PyExc_ValueError, "This node is not part of region %i.", regionIdx);
+        return NULL;
+    }
+
     // Insert a contact
-    ok = rfx_insert_contact(fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr);
+    ok = rfx_insert_contact(rid, fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr);
     if (ok < 0) {
         pyion_SetExc(PyExc_RuntimeError, "Error in rfx_insert_contact.");
         return NULL;
@@ -446,7 +454,7 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
     }
 
     // Delete the contact(s)
-    oK(rfx_remove_contact(fromTime, fromNode, toNode));
+    oK(rfx_remove_contact(&fromTime, fromNode, toNode));
 
     Py_RETURN_NONE;
 }
@@ -478,7 +486,7 @@ static PyObject *pyion_delete_range(PyObject *self, PyObject *args) {
     }
 
     // Delete the contact(s)
-    oK(rfx_remove_range(fromTime, fromNode, toNode));
+    oK(rfx_remove_range(&fromTime, fromNode, toNode));
 
     Py_RETURN_NONE;
 }
