@@ -83,7 +83,7 @@ def cgr_list_ranges():
     """
     return _admin.list_ranges()
 
-def cgr_add_contact(orig, dest, tstart, tend, rate, confidence=1.0):
+def cgr_add_contact(orig, dest, tstart, tend, rate, region=0, confidence=1.0):
     """ Add a contact to ION's contact plan
 
         :param int orig: Node number of the contact origin
@@ -91,6 +91,7 @@ def cgr_add_contact(orig, dest, tstart, tend, rate, confidence=1.0):
         :param str tstart: Contact start time. Format is ``yyyy/mm/dd-hh:MM:ss``
         :param str tend: Contact end time. Format is ``yyyy/mm/dd-hh:MM:ss``
         :param float rate: Contact data rate in [bits/sec].
+        :param int region: Region index. Defaults to 0.
         :param float confidence: Contact confidence. Defaults to 1. 
 
         .. Warning:: The contact data rate gets transformed to bytes/sec 
@@ -101,7 +102,7 @@ def cgr_add_contact(orig, dest, tstart, tend, rate, confidence=1.0):
     tend   = utils.rel2abs_time(tend)
 
     # Add the contact
-    _admin.add_contact(orig, dest, tstart, tend, int(rate/8), confidence)
+    _admin.add_contact(region, orig, dest, tstart, tend, int(rate/8), confidence)
 
 def cgr_add_range(orig, dest, tstart, tend, owlt=0.0):
     """ Add a range to ION's contact plan
