@@ -83,6 +83,12 @@ README = (Path(__file__).parent / "README.md").read_text()
 lib_path = os.environ.get('LD_LIBRARY_PATH')
 ion_path = os.environ.get('ION_HOME')
 
+# ION_HOME is now mandatory since bputa should be public API but is not.
+if not ion_path:
+    raise ValueError(("Environment variable ION_HOME must indicate the location of ION's ",
+                      "source code directory"))
+                       
+
 # Set paths for ION's public API
 if lib_path is None:
     # Default paths
@@ -97,21 +103,27 @@ else:
     ion_inc = (lib_path.parent)/'include'   # ION headers (.h)
     ion_lib = lib_path                      # ION shared libraries (.so)
 
+# Set paths for compiling _admin
+ion_path  = Path(ion_path)
+bp_path   = ion_path/'bp'/'library'
+cfdp_path = ion_path/'cfdp'/'library'
+ltp_path  = ion_path/'ltp'/'library'
+
 # Set paths for ION's private API
-if ion_path:
-    warn('Compiling ``admin`` module into pyion.') 
+#if ion_path:
+#    warn('Compiling ``admin`` module into pyion.') 
 
     # Set paths for compiling _admin
-    ion_path  = Path(ion_path)
-    bp_path   = ion_path/'bp'/'library'
-    cfdp_path = ion_path/'cfdp'/'library'
-    ltp_path  = ion_path/'ltp'/'library'
-else:
-    warn('Module ``admin`` not compiled. Set the environment variable ``ION_HOME``.', 
-         category=SetupWarning)
+    #ion_path  = Path(ion_path)
+    #bp_path   = ion_path/'bp'/'library'
+    #cfdp_path = ion_path/'cfdp'/'library'
+    #ltp_path  = ion_path/'ltp'/'library'
+#else:
+    #warn('Module ``admin`` not compiled. Set the environment variable ``ION_HOME``.', 
+    #     category=SetupWarning)
     
     # Just empty paths, they won't be used
-    bp_path, cfdp_path, ltp_path = '', '', ''
+    #bp_path, cfdp_path, ltp_path = '', '', ''
 
 # ========================================================================================
 # === Figure out compile-time options
