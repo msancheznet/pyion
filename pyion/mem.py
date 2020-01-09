@@ -153,11 +153,12 @@ class SdrProxy(MemoryProxy):
 class PsmProxy(MemoryProxy):
     """ Proxy object to ION's PSM 
     
-        :ivar int wm_key: See ``wmKey`` in ``ionconfig``
+        :ivar int wm_key: See ``wmKey`` in ``ionconfig``. Defaults to 65281 
+                          (i.e., ION's default value)
         :ivar int wm_size: Unused
         :ivar str partition_name: Unused
     """
-    def __init__(self, node_nbr, wm_key, wm_size=0, partition_name=-1):
+    def __init__(self, node_nbr, wm_key=65281, wm_size=0, partition_name=-1):
         # Call parent constructor
         super().__init__(node_nbr)
 
