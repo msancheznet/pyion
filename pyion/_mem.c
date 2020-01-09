@@ -86,8 +86,10 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     size_t          lp_blk_size = WORD_SIZE;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "s", &sdrName))
+    if (!PyArg_ParseTuple(args, "s", &sdrName)) {
+        pyion_SetExc(PyExc_ValueError, "Cannot parse arguments");
         return NULL;
+    }
 
     // Attach to SDR and start using it
     sdr_initialize(0, NULL, SM_NO_KEY, NULL);
@@ -102,7 +104,7 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     // Get the state of the SDR
     if (!sdr_pybegin_xn(sdr)) return NULL;
     sdr_usage(sdr, &sdrUsage);
-    if (!sdr_end_xn(sdr)) return NULL;
+    if (!sdr_pyend_xn(sdr)) return NULL;
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = sdrUsage.smallPoolFree;
