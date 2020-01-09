@@ -104,16 +104,19 @@ class Entity():
 							  engine. It defaults to source_file
 			:param **kwargs: See ``proxy.cfdp_send``
 		"""
+		# Create path object
+		src_file = Path(source_file)
+
+		# Check that the source file exists
+		if not src_file.exists():
+			raise FileNotFoundError('Source file {} does not exist'.format(src_file))
+
 		# Initialize variables
-		src_file = Path(source_file).resolve().absolute()
+		src_file = src_file.resolve().absolute()
 
 		# Set default values
 		dst_file = source_file if dest_file is None else dest_file
 		
-		# Check that the source file exists
-		if not src_file.exists():
-			raise IOError('Source file {} does not exist'.format(src_file))
-
 		# Set default values if necessary
 		if mode is None: mode = self.mode
 		if closure_lat is None: closure_lat = self.closure_lat
