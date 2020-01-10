@@ -48,7 +48,8 @@ class Endpoint():
 						 C Extension. Do not modify or potential memory leak 						
 	"""
 	def __init__(self, proxy, eid, sap_addr, TTL, priority, report_eid,
-				 custody, report_flags, ack_req, retx_timer, detained, chunk_size):
+				 custody, report_flags, ack_req, retx_timer, detained, 
+				 chunk_size, timeout):
 		""" Endpoint initializer  """
 		# Store variables
 		self.proxy        = proxy
@@ -64,6 +65,7 @@ class Endpoint():
 		self.retx_timer   = retx_timer
 		self.chunk_size   = chunk_size
 		self.detained     = detained
+		self.timeout      = timeout
 
 		# TODO: This properties are hard-coded because they are not 
 		# yet supported
@@ -230,7 +232,7 @@ class Endpoint():
 			return e
 
 	@utils._chk_is_open
-	def bp_receive(self, chunk_size=None):
+	def bp_receive(self, chunk_size=None, timeout=None):
 		""" Receive data through the proxy. This is BLOCKING call. If an error
 			occurred while receiving, an exception is raised.
 		
@@ -247,20 +249,39 @@ class Endpoint():
 							   If specified, it tells you the least number of bytes to read
 							   at once (i.e., this function will return a bytes object
 							   with length >= chunk_size)
+			:param timeout: If not specified, then no timeout is used. If specified,
+							reception of a bundle will be cancelled after timeout seconds.
 		"""
 		# Get default values if necessary
 		if chunk_size is None: chunk_size = self.chunk_size
+		if timeout is None: timeout = self.timeout
+
+		# For now, do not let user use both chunk_size and timeout together
+		# to avoid complexity
+		if chunk_size and timeout:
+			raise ValueError('bp_receive cannot have chunk_size and timeout at the same time.')
 
 		# Open another thread because otherwise you cannot handle a SIGINT
 		th = Thread(target=self._bp_receive, args=(chunk_size,), daemon=True)
 		th.start()
-		th.join()
+
+		# Wait for a bundle to be delivered	and set a timeout
+		th.join(timeout)
+
+		# Handle the case where you have timed-out
+		if th.is_alive():
+			self._bp_receive_timeout()
+			return self.result
 
 		# If exception, raise it
 		if isinstance(self.result, Exception):
 			raise self.result
 
 		return self.result
+
+	def _bp_receive_timeout(self):
+		# Interrupt the reception of bundles from ION. 
+		self.proxy.bp_interrupt(self.eid)
 
 	def __enter__(self):
 		""" Allows an endpoint to be used as context manager """

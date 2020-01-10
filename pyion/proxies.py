@@ -10,22 +10,22 @@
 # ===========================================================================
 """
 
+import os
+import signal
+from pathlib import Path
+from time import sleep
 # General imports
 from unittest.mock import Mock
-import os
-from pathlib import Path
-import signal
-from time import sleep
 from warnings import warn
 
 # Module imports
 import pyion
-import pyion.utils as utils
-import pyion.constants as cst
 import pyion.bp as bp
 import pyion.cfdp as cfdp
+import pyion.constants as cst
 import pyion.ltp as ltp
 import pyion.mem as mem
+import pyion.utils as utils
 
 # Import C Extensions
 try:
@@ -248,7 +248,7 @@ class BpProxy(utils.Proxy):
     def bp_open(self, eid, TTL=3600, priority=cst.BpPriorityEnum.BP_STD_PRIORITY,
                 report_eid=None, custody=cst.BpCustodyEnum.NO_CUSTODY_REQUESTED,
                 report_flags=cst.BpReportsEnum.BP_NO_RPTS, ack_req=cst.BpAckReqEnum.BP_NO_ACK_REQ,
-                retx_timer=0, chunk_size=None):
+                retx_timer=0, chunk_size=None, timeout=None):
         """ Open an endpoint. If it already exists, the existing instance
             is returned.
 
@@ -274,8 +274,10 @@ class BpProxy(utils.Proxy):
                             is ``BpAckReqEnum.BP_NO_ACK_REQ``
             :param retx_timer: Custodial timer retransmission in [sec]. Defaults to 0, which 
                                means that no timer is created.
-            :param chunk_size: Send data in bundles of ``chunk_size`` bytes (plus header), 
+            :param chunk_size: Send/Receive data in bundles of ``chunk_size`` bytes (plus header), 
                                instead of a single potentially very large bundle.
+            :param timeout: If specified, the endpoint will be interrupted if timeout
+                            seconds elapse without receiving anything.
             :return: Endpoint object
         """
         # If this EID is already open, return it
@@ -292,7 +294,7 @@ class BpProxy(utils.Proxy):
         # Create an endpoint
         ept_obj = bp.Endpoint(self, eid, sap_addr, TTL, int(priority), report_eid,
                               int(custody), int(report_flags), int(ack_req), 
-                              int(retx_timer), detained, chunk_size)
+                              int(retx_timer), detained, chunk_size, timeout)
 
         # Store it
         self._ept_map[eid] = ept_obj
