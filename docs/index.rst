@@ -127,7 +127,6 @@ Contents
    :maxdepth: 3
    :numbered:
 
-   index.rst
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
