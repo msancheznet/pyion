@@ -16,6 +16,7 @@ pyion: A Python Extension for the Interplanetary Overlay Network
 		  Pasadena, CA 91109
 :Contact: marc.sanchez.net@jpl.nasa.gov
 :Organization: Jet Propulsion Laboratory (JPL)
+:Repository: https://github.com/msancheznet/
 :Release: |release|
 
 :Abstract:
@@ -83,12 +84,12 @@ Installation Instructions
     export ION_HOME=/......
     python3 setup.py install
 
-The environment variable ``$ION_HOME`` should ideally be set to the base path where ION is installed, although it this is not mandatory. In fact, if not available, pyion will still be installed but all administrative/management functionality will not be available (e.g., ability to query/modify a contact plan directly from Python).
+The environment variable ``$ION_HOME`` must be set to the base path where ION is installed.
 
 Dependencies
 ------------
 
-The only dependency ``pyion`` uses is ION itself. All tests conducted to date have been performed using ION-3.6.2 over an Ubuntu-based operating system running in either a laptop, a Docker container, or a Raspberry Pi (arm architecture). The package might also work in other setups (e.g., ION-3.6.0), but there is no guarantee that this is the case.
+The only dependency ``pyion`` uses is ION itself. Different ION versions are mapped to pyion as branches in the GitHub repository (e.g., for ION 3.7.0, pull from the branch v3.7.0). ION versions for which there is no explicit branch might be work with pyion, but no compatibility guarantees are enforced. Also, all tests conducted to date have been performed over an Ubuntu-based operating system running in either a laptop, a Docker container, or a Raspberry Pi (arm architecture).
 
 ``Pyion`` is internally built as a collection of Python C Extensions wrapped in Python classes or functions. These C extensions are compiled during the package's installation process and require access to the ION's public and potentially private interfaces (a collection of ``.h`` and ``.so`` files in an Ubuntu-based host). Therefore, the file ``setup.py`` found in the root folder of the makes assumptions on where these are located in the host file system:
 

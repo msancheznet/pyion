@@ -203,3 +203,22 @@ Here is a more complicated example of a transmitter and receiver that exchange d
                     print(data)
             except InterruptedError:
                 break
+
+Receive Timeouts
+----------------
+
+Whenever you receive from an endpoint (through ``bp_received``) the calling is blocked until data arrives. Sometimes, it is useful to set a timeout on how long you are willing to wait for data to arrive. This functionality is now available as of pyion-v3.7.0:
+
+.. code-block:: python
+    :linenos:
+
+    with proxy.bp_open(EID) as eid:
+        while eid.is_open:
+            try:
+                # We set a timeout of 60 seconds
+                data = eid.bp_receive(timeout=60)
+
+                # We check if the timeout has gone off
+                if isinstance(data, Exception):
+                    print('Timeout when off.')
+                    break
