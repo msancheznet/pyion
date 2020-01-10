@@ -62,8 +62,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-3.6.2'
-__release__ = 'R2019c'
+__version__ = 'pyion-3.7.0'
+__release__ = 'R2020a'
 
 # ========================================================================================
 # ===  Helper definitions
