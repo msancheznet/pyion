@@ -47,15 +47,15 @@ __all__ = [
 class BpCustodyEnum(IntEnum):
     """ BP custody switch enumeration. See ``help(CustodyEnum)`` """
     NO_CUSTODY_REQUESTED    = 0
-    SOURCE_CUSTODY_OPTIONAL = 0
-    SOURCE_CUSTODY_REQUIRED = 0
+    SOURCE_CUSTODY_OPTIONAL = 1
+    SOURCE_CUSTODY_REQUIRED = 2
 
 @unique
 class BpPriorityEnum(IntEnum):
     """ BP priority enumeration. See ``help(BpPriorityEnum)`` """
     BP_BULK_PRIORITY      = 0
-    BP_STD_PRIORITY       = 0
-    BP_EXPEDITED_PRIORITY = 0
+    BP_STD_PRIORITY       = 1
+    BP_EXPEDITED_PRIORITY = 2
 
 @unique
 class BpEcsEnumeration(IntEnum):
@@ -68,20 +68,20 @@ class BpEcsEnumeration(IntEnum):
         - BP_RELIABLE_STREAMING: BP_BEST_EFFORT | BP_RELIABLE
     """
     BP_MINIMUM_LATENCY    = 0
-    BP_BEST_EFFORT        = 0
-    BP_FLOW_LABEL_PRESENT = 0
-    BP_RELIABLE           = 0      
-    BP_RELIABLE_STREAMING = 0
+    BP_BEST_EFFORT        = 1
+    BP_FLOW_LABEL_PRESENT = 2
+    BP_RELIABLE           = 3      
+    BP_RELIABLE_STREAMING = 4
 
 @unique
 class BpReportsEnum(IntEnum):
     """ BP reports enumeration. See ``help(BpReportsEnum)`` """
     BP_NO_RPTS       = 0
-    BP_RECEIVED_RPT  = 0
-    BP_CUSTODY_RPT   = 0
-    BP_FORWARDED_RPT = 0
-    BP_DELIVERED_RPT = 0
-    BP_DELETED_RPT   = 0
+    BP_RECEIVED_RPT  = 1
+    BP_CUSTODY_RPT   = 2
+    BP_FORWARDED_RPT = 3
+    BP_DELIVERED_RPT = 4
+    BP_DELETED_RPT   = 5
 
 @unique
 class BpAckReqEnum(IntEnum):
@@ -134,59 +134,59 @@ class CfdpMetadataEnum(IntEnum):
 class CfdpFileStoreEnum(IntEnum):
     """ CFDP file store actions. See ``help(CfdpFileStoreEnum)`` """
     CFDP_CREATE_FILE  = 0
-    CFDP_DELETE_FILE  = 0
-    CFDP_RENAME_FILE  = 0
-    CFDP_APPEND_FILE  = 0
-    CFDP_REPLACE_FILE = 0
-    CFPD_CREATE_DIR   = 0
-    CFDP_REMOVE_DIR   = 0
-    CFDP_DENY_FILE    = 0
-    CFDP_DENY_DIR     = 0
+    CFDP_DELETE_FILE  = 1
+    CFDP_RENAME_FILE  = 2
+    CFDP_APPEND_FILE  = 3
+    CFDP_REPLACE_FILE = 4
+    CFPD_CREATE_DIR   = 5
+    CFDP_REMOVE_DIR   = 6
+    CFDP_DENY_FILE    = 7
+    CFDP_DENY_DIR     = 8
 
 @unique
 class CfdpEventEnum(IntEnum):
     """ CFDP event types. See ``help(CfdpEventEnum)`` and Section 3.5.6 of CCSDS CFDP """
     CFDP_NO_EVENT                 = 0
-    CFDP_TRANSACTION_IND          = 0
-    CFDP_EOF_SENT_IND             = 0
-    CFDP_TRANSACTION_FINISHED_IND = 0
-    CFDP_METADATA_RECV_IND        = 0
-    CFDP_FILE_SEGMENT_IND         = 0
-    CFDP_EOF_RECV_IND             = 0
-    CFDP_SUSPENDED_IND            = 0
-    CFDP_RESUMED_IND              = 0
-    CFDP_REPORT_IND               = 0
-    CFDP_FAULT_IND                = 0
-    CFDP_ABANDONED_IND            = 0
+    CFDP_TRANSACTION_IND          = 1
+    CFDP_EOF_SENT_IND             = 2
+    CFDP_TRANSACTION_FINISHED_IND = 3
+    CFDP_METADATA_RECV_IND        = 4
+    CFDP_FILE_SEGMENT_IND         = 5
+    CFDP_EOF_RECV_IND             = 6
+    CFDP_SUSPENDED_IND            = 7
+    CFDP_RESUMED_IND              = 8
+    CFDP_REPORT_IND               = 9
+    CFDP_FAULT_IND                = 10
+    CFDP_ABANDONED_IND            = 11
     CFDP_ALL_IND                  = 100
 
 @unique
 class CfdpConditionEnum(IntEnum):
     """ CFDP condition types. See ``help(CfdpConditionEnum)`` """
     CFDP_NO_ERROR                 = 0
-    CFDP_ACK_LIMIT_REACHED        = 0
-    CFDP_KEEP_ALIVE_LIMIT_REACHED = 0
-    CFDP_INVALID_TRANS_MODE       = 0
-    CFDP_FILESTORE_REJECT         = 0
-    CFDP_CHECKSUM_FAIL            = 0
-    CFDP_FILESIZE_ERROR           = 0
-    CFDP_NACK_LIMI_REACHED        = 0
-    CFDP_INACTIVITY_DETECTED      = 0
-    CFDP_INVALID_FILE_STRUCT      = 0
-    CFDP_CHECK_LIMIT_REACHED      = 0
-    CFDP_SUSPED_REQUESTED         = 0
-    CFDP_CANCEL_REQUESTED         = 0
+    CFDP_ACK_LIMIT_REACHED        = 1
+    CFDP_KEEP_ALIVE_LIMIT_REACHED = 2
+    CFDP_INVALID_TRANS_MODE       = 3
+    CFDP_FILESTORE_REJECT         = 4
+    CFDP_CHECKSUM_FAIL            = 5
+    CFDP_FILESIZE_ERROR           = 6
+    CFDP_NACK_LIMI_REACHED        = 7
+    CFDP_INACTIVITY_DETECTED      = 8
+    CFDP_INVALID_FILE_STRUCT      = 9
+    CFDP_CHECK_LIMIT_REACHED      = 10
+    CFDP_SUSPED_REQUESTED         = 11
+    CFDP_CANCEL_REQUESTED         = 12
 
 @unique
 class CfdpFileStatusEnum(IntEnum):
     """ CFDP file status enumeration. See ``help(CfdpFileStatusEnum)`` """
     CFDP_FILE_DISCARDED  = 0
-    CFDP_FILE_REJECTED   = 0
-    CFDP_FILE_RETAINED   = 0
-    CFDP_FILE_UNREPORTED = 0
+    CFDP_FILE_REJECTED   = 1
+    CFDP_FILE_RETAINED   = 2
+    CFDP_FILE_UNREPORTED = 3
 
 @unique
 class CfdpDeliverCodeEnum(IntEnum):
     """ CFDP delivery code enumeration. See ``help(CfdpDeliverCodeEnum)`` """
     CFDP_DATA_COMPLETE   = 0
-    CFDP_DATA_INCOMPLETE = 0
+    CFDP_DATA_INCOMPLETE = 1
