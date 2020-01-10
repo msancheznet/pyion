@@ -206,15 +206,15 @@ setup(
     license          = 'Apache 2.0',
     url              = 'https://github.com/msancheznet/pyion',
     python_requires  = '>=3.5.0',
-    setup_requires   = ['sphinx_bootstrap_theme'],
+    setup_requires   = [],
     install_requires = ['setuptools'],
     extras_require   = {
                 'test': [],
-                'docs': ['sphinx', 'sphinx_bootstrap_theme'],
+                'docs': ['sphinx', 'sphinx_rtd_theme'],
             },
     entry_points     = {
                 'sphinx.html_themes': [
-                    'bootstrap = sphinx_bootstrap_theme',
+                    'bootstrap = sphinx_rtd_theme',
                 ]
     },
     packages         = ["pyion"],
