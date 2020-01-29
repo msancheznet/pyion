@@ -16,7 +16,7 @@ Pre-Installation Steps
 5) Install Python development tools:
 
    - Ubuntu: ``sudo apt-get install autotools-dev automake python3-dev``
-   - CentOS: ``sudo yum groupinstall "Development tools"``and ``sudo yum install python3-devel``
+   - CentOS: ``sudo yum groupinstall "Development tools"`` and ``sudo yum install python3-devel``
 6) Set LD_LIBRARY_PATH environment variable in ``.bashrc``:
 
    - Ubuntu: Not required for default value (``/usr/local/lib``). Set it for any other system path.
