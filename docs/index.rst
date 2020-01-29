@@ -52,7 +52,6 @@ To quickly demonstrate how ``pyion`` works, here is a brief example of two Pytho
 .. code-block:: python
     :linenos:
 
-    python
     import pyion
 
     # Create a proxy to node 2 and attach to it
@@ -84,7 +83,7 @@ Installation Instructions
     export ION_HOME=/......
     python3 setup.py install
 
-The environment variable ``$ION_HOME`` must be set to the base path where ION is installed.
+The environment variable ``$ION_HOME`` must point to the path where the ION source code is located.
 
 Dependencies
 ------------
