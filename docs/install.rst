@@ -44,14 +44,11 @@ The only dependency ``pyion`` uses is ION itself. Different ION versions are map
 ION Installation Bash Script
 ----------------------------
 
-.. code-block:: python
-    :linenos:
-   
-   autoheader
-   aclocal
-   autoconf
-   automake
-   ./configure CFLAGS='-O0 -ggdb3' CPPFLAGS='-O0 -ggdb3' CXXFLAGS='-O0 -ggdb3'
-   make
-   make install
-   ldconfig
+autoheader
+aclocal
+autoconf
+automake
+./configure CFLAGS='-O0 -ggdb3' CPPFLAGS='-O0 -ggdb3' CXXFLAGS='-O0 -ggdb3'
+make
+make install
+ldconfig
