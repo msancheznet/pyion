@@ -15,8 +15,8 @@ Pre-Installation Steps
    - CentOS: ``sudo yum install python3``
 5) Install Python development tools:
 
-   - Ubuntu: ``sudo apt-get install python3-dev``
-   - CentOS: ``sudo yum install python3-devel``
+   - Ubuntu: ``sudo apt-get install autotools-dev automake python3-dev``
+   - CentOS: ``sudo yum groupinstall "Development tools"``and ``sudo yum install python3-devel``
 6) Set LD_LIBRARY_PATH environment variable in ``.bashrc``:
 
    - Ubuntu: Not required for default value (``/usr/local/lib``). Set it for any other system path.
@@ -26,7 +26,7 @@ Installation Steps
 ------------------
 
 7) Create the ION_HOME environment variable (``export ION_HOME=/...``) and point it to ION's main folder (where its source code is located, see step 1).
-8) Install pyion: ``sudo -E python3 setup.py install``
+8) Compile and install pyion: ``sudo -E python3 setup.py install``
 
 Summary of Dependencies
 -----------------------
