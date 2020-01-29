@@ -71,31 +71,6 @@ To quickly demonstrate how ``pyion`` works, here is a brief example of two Pytho
 
 Pyion interfaces with ION through a collection of **proxies**. Each proxy is intended to be linked to a protocol in the DTN protocol stack (i.e., there is a proxy to the BP protocol, as seen in the previous example, but there are different proxies to LTP and CFDP, as well ION's SDR and PSM), as well as a node number. To avoid having muliple proxies to the same node, proxies should not be created directly by the user but rather instantiated using ``pyion.get_<type>_proxy(<node_number>)``. Proxies are used to manage service access points to a given protocol (e.g., endpoint for the BP, entity for CFDP, etc.). This includes opening and closing them, as well as interrupting their operation if necessary. In turn, the access point itself is typically only used to send and receive data.
 
-Installation Instructions
-=========================
-
-``Pyion`` is currently not hosted in any Python repository (e.g., pip, conda) because installation of the package is only possible in computers where ION is already available. However, installing it is as simple as downloading the package and then, in a terminal, running
-
-.. code-block:: bash
-    :linenos:
-
-    cd /pyion
-    export ION_HOME=/......
-    python3 setup.py install
-
-The environment variable ``$ION_HOME`` must point to the path where the ION source code is located.
-
-Dependencies
-------------
-
-The only dependency ``pyion`` uses is ION itself. Different ION versions are mapped to pyion as branches in the GitHub repository (e.g., for ION 3.7.0, pull from the branch v3.7.0). ION versions for which there is no explicit branch might be work with pyion, but no compatibility guarantees are enforced. Also, all tests conducted to date have been performed over an Ubuntu-based operating system running in either a laptop, a Docker container, or a Raspberry Pi (arm architecture).
-
-``Pyion`` is internally built as a collection of Python C Extensions wrapped in Python classes or functions. These C extensions are compiled during the package's installation process and require access to the ION's public and potentially private interfaces (a collection of ``.h`` and ``.so`` files in an Ubuntu-based host). Therefore, the file ``setup.py`` found in the root folder of the makes assumptions on where these are located in the host file system:
-
-- Public ION Interface: Required for installing ``pyion``. It is assumed to be located at ``/usr/local/include`` and ``usr/local/lib`` unless the environment variable ``LD_LIBRARY_PATH`` is available.
-
-- Private ION interface: Optional for installing ``pyion``. If not available, then ``pyion`` has all administrative functions disabled. To enable them, set the environment variable ``ION_HOME`` to ION's root folder and then run the setup process.
-
 Multiple ION Nodes in a Single Host
 ===================================
 
@@ -126,6 +101,7 @@ Contents
    :maxdepth: 3
    :numbered:
 
+   Install.rst
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
