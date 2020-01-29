@@ -44,7 +44,7 @@ The only dependency ``pyion`` uses is ION itself. Different ION versions are map
 ION Installation Bash Script
 ----------------------------
 
-.. code-block:: bash
+.. code-block:: python
     :linenos:
    
    autoheader
