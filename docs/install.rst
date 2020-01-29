@@ -35,7 +35,7 @@ Installation Steps
 ------------------
 
 7) Create the ION_HOME environment variable (``export ION_HOME=/...``) and point it to ION's main folder (where its source code is located, see step 1).
-8) Install pyion: ``python3 setup.py install``
+8) Install pyion: ``sudo -E python3 setup.py install``
 
 Summary of Dependencies
 -----------------------
