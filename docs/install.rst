@@ -45,10 +45,17 @@ ION Installation Bash Script
 ----------------------------
 
 autoheader
+
 aclocal
+
 autoconf
+
 automake
+
 ./configure CFLAGS='-O0 -ggdb3' CPPFLAGS='-O0 -ggdb3' CXXFLAGS='-O0 -ggdb3'
+
 make
+
 make install
+
 ldconfig
