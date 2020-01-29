@@ -8,16 +8,7 @@ Pre-Installation Steps
 
 1) Download ION from https://sourceforge.net/projects/ion-dtn/ making sure that you match the ION and pyion version number.
 2) If necessary, copy-paste the downloaded source code into a more desirable/permanent location (pyion will need to link against this location).
-3) Install ION. This can be done, for instance, with the following step of commands:
-   
-   - ``autoheader``
-   - ``aclocal``
-   - ``autoconf``
-   - ``automake``
-   - ``./configure CFLAGS='-O0 -ggdb3' CPPFLAGS='-O0 -ggdb3' CXXFLAGS='-O0 -ggdb3'``
-   - ``make``
-   - ``make install``
-   - ``ldconfig``
+3) Install ION (see installation script below).
 4) Install Python3.5 (or a later version):
 
    - Ubuntu: No additional steps required, comes with python 3.5 by default.
@@ -40,6 +31,8 @@ Installation Steps
 Summary of Dependencies
 -----------------------
 
+**NOTE: As of pyion-3.7.0, the environment variable ``ION_HOME`` is mandatory**
+
 The only dependency ``pyion`` uses is ION itself. Different ION versions are mapped to pyion as branches in the GitHub repository (e.g., for ION 3.7.0, pull from the branch v3.7.0). ION versions for which there is no explicit branch might be work with pyion, but no compatibility guarantees are enforced. Also, all tests conducted to date have been performed over an Ubuntu or CentOS operating system running in either a laptop, a Docker container, or a Raspberry Pi (arm architecture).
 
 ``Pyion`` is internally built as a collection of Python C Extensions wrapped in Python classes or functions. These C extensions are compiled during the package's installation process and require access to the ION's public and potentially private interfaces (a collection of ``.h`` and ``.so`` files in an Ubuntu-based host). Therefore, the file ``setup.py`` found in the root folder of the makes assumptions on where these are located in the host file system:
@@ -48,4 +41,17 @@ The only dependency ``pyion`` uses is ION itself. Different ION versions are map
 
 - Private ION interface: Optional for installing ``pyion``. If not available, then ``pyion`` has all administrative functions disabled. To enable them, set the environment variable ``ION_HOME`` to ION's root folder and then run the setup process.
 
-**NOTE: As of pyion-3.7.0, the environment variable ``ION_HOME`` is mandatory**
+ION Installation Script
+-----------------------
+
+.. role:: bash(code)
+   :language: bash
+   
+   autoheader
+   aclocal
+   autoconf
+   automake
+   ./configure CFLAGS='-O0 -ggdb3' CPPFLAGS='-O0 -ggdb3' CXXFLAGS='-O0 -ggdb3'
+   make
+   make install
+   ldconfig
