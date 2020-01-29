@@ -41,11 +41,11 @@ The only dependency ``pyion`` uses is ION itself. Different ION versions are map
 
 - Private ION interface: Optional for installing ``pyion``. If not available, then ``pyion`` has all administrative functions disabled. To enable them, set the environment variable ``ION_HOME`` to ION's root folder and then run the setup process.
 
-ION Installation Script
------------------------
+ION Installation Bash Script
+----------------------------
 
-.. role:: bash(code)
-   :language: bash
+.. code-block:: bash
+    :linenos:
    
    autoheader
    aclocal
