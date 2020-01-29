@@ -101,7 +101,7 @@ Contents
    :maxdepth: 3
    :numbered:
 
-   Install.rst
+   install.rst
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
