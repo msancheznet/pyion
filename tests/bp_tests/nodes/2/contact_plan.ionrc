@@ -1,0 +1,9 @@
+m horizon  +0
+m home 0
+
+^ 0
+a contact  -1      0 1 1   0
+a contact  -1      0 2 2   0
+a contact  +0 +60000 1 2   100000
+a contact  +0 +60000 2 1   100000
+a range    +0 +60000 1 2   1

@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# =====================================================================
+# Send a file from a node to another node using ``cfdptest``. The size
+# of a CFDP PDU is configured in ``node.cfdprc``
+#
+# .. Tip:: CFDP requires both ipn:x.64 and ipn:x.65 to be valid endpoints
+#
+# Parameters
+# ----------
+#   $1 : Name of the transmitting ION Node
+#   $2 : Name of the receiving ION node
+#   $3 : Path of the source file. 
+#        Default is ``~/ion-interface/nodes/$1/data/source_file``
+#   $4 : Path of the file at the destination. 
+#        Default is ``~/ion-interface/nodes/$2/data/destination_file``
+#
+# Usage
+# -----
+# root@ion_node1:~/ion-interface# ./cfdpsend 1 2
+#
+# Author: Marc Sanchez Net
+# Date:   01/08/2019
+#
+# =====================================================================
+
+# Set environment variables
+export ION_NODE_LIST_DIR="$PWD/nodes"
+
+# Get current directory
+cur_dir=$PWD
+
+# Go to node folder
+cd "nodes/$1" 2>/dev/null
+
+# Check if node exists
+if [ $? -eq 1 ]
+then
+    echo "Node $1 does not exists."
+    echo "Bundle not sent."
+    exit
+fi 
+
+# Set source file if not provided. Default is ``source_file``
+tx_file=${3:-$cur_dir/nodes/$1/data/source_file}
+
+# Set destination file is not provided. Default is ``destination_file``
+rx_file=${4:-$cur_dir/nodes/$2/data/destination_file}
+
+# Delete the file with CFDP commands (in case it was previously there)
+rm -f cfdp_cmds
+
+# Create file with CFDP commands
+printf "%s\n" "z 2" >> cfdp_cmds    # Sleep for 2 seconds
+printf "%s\n" "d $2" >> cfdp_cmds   # Set destination to node $2
+printf "%s\n%s\n" "f $tx_file" "t $rx_file" >> cfdp_cmds # Set tx and rx files
+printf "%s\n" "a 10" >> cfdp_cmds   # Wait 10 seconds until you receive EOF confirmation
+printf "%s" "&" >> cfdp_cmds        # Trigger the sending of the file
+
+# Display message
+echo "Sending <$tx_file> from node $1 to node $2."
+echo "It will be stored as <$rx_file>."
+
+# Trigger sending a file
+cfdptest < cfdp_cmds
+
+# Notify success
+echo "File successfully sent."

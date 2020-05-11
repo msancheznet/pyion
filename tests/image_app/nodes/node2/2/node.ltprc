@@ -1,0 +1,15 @@
+1 300
+
+# Connection to node 1
+a span 1 100 100 100 100 1 'udplso 196.127.0.101:3001 10000'
+
+# Loopback
+a span 2 100 100 1200 1200 1 'udplso 196.127.0.102:3001 10000'
+
+w 1
+
+# Set max ber very high to not have errors because import/export sessions are cancelled
+m maxber 0.9999
+
+# One input for all incoming connections
+s 'udplsi 196.127.0.102:3001'
