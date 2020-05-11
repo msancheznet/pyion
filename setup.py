@@ -138,7 +138,7 @@ elif hw_type == 31:
 elif hw_type == 16:
     ds = 1
 else:
-    raise ValueError('Cannot determine compute type (16 vs. 32 vs. 64 bits)')
+    raise ValueError('Cannot determine host type (16 vs. 32 vs. 64 bits)')
 
 # Defined C compilation options for the extensions.
 compile_args = [
