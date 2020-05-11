@@ -1,0 +1,53 @@
+# ==================================================================================================== node.bprc ====================================================================================================
+# Auto-generated @ Tuesday, 12. February 2019 09:30AM
+# ===================================================================================================================================================================================================================
+
+# Initialize
+1
+
+# Define a naming scheme for BP and its forwarder
+a scheme ipn 'ipnfw' 'ipnadminep'
+
+# New endpoint ipn.2.0
+a endpoint ipn:2.0 x
+
+# New endpoint ipn.2.1
+a endpoint ipn:2.1 x
+
+# New endpoint ipn.2.2
+a endpoint ipn:2.2 x
+
+# New endpoint ipn.2.64
+a endpoint ipn:2.64 x
+
+# New endpoint ipn.2.65
+a endpoint ipn:2.65 x
+
+# New endpoint ipn.2.100
+a endpoint ipn:2.100 x
+
+# New endpoint ipn.2.101
+a endpoint ipn:2.101 x
+
+# New endpoint ipn.2.102
+a endpoint ipn:2.102 x
+
+# Define the udp protocol: protocol name, payload [bytes], overhead [bytes], nominal_rate [bytes/sec]
+a protocol udp 1400 100 125000
+
+# Define an induct: protocol name, duct name, CLI command
+a induct udp 196.128.0.102:4602 udpcli
+
+# Define an outduct: protocol name, duct name, CLO command
+a outduct udp 196.128.0.101:4601 'udpclo 0'
+
+# Define all plans in ``node.ipnrc``
+r 'ipnadmin node.ipnrc'
+
+# Activate/Deactivate watch characters
+w 1
+
+# Start BP operation
+s
+
+# ======================================================================================================= EOF =======================================================================================================

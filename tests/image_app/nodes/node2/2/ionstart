@@ -1,0 +1,10 @@
+#!/bin/bash 
+ionadmin	node.ionrc 
+ionadmin	../contact_plan.ionrc & 
+#ionsecadmin	node.ionsecrc &
+sleep 0.1
+ltpadmin	node.ltprc & 
+#sleep 0.1
+#bpadmin		node.bprc & 
+sleep 0.1
+#cfdpadmin	node.cfdprc &

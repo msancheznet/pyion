@@ -1,0 +1,40 @@
+1
+a scheme ipn 'ipnfw' 'ipnadminep'
+
+# ============================================================
+# === Define endpoints
+# ============================================================
+
+# Default
+a endpoint ipn:1.0 x
+       
+# Generic for tx/rx
+a endpoint ipn:1.1 x
+
+# Generic for tx/rx   
+a endpoint ipn:1.2 x
+
+# CFDP requires it  
+a endpoint ipn:1.64  
+a endpoint ipn:1.65 x
+
+# Default port where bpecho is listening
+a endpoint ipn:1.100 x
+
+# Default port where bpreceivefile is listening
+a endpoint ipn:1.101 x
+
+# Default port where bpsink is listening
+a endpoint ipn:1.102 x
+
+# ============================================================
+# === Define outducts/inducts
+# ============================================================
+
+a protocol ltp 1400 100
+a induct ltp 1 ltpcli
+a outduct ltp 1 ltpclo
+a outduct ltp 2 ltpclo
+r 'ipnadmin node.ipnrc'
+w 1
+s
