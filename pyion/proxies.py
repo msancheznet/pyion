@@ -28,13 +28,9 @@ import pyion.mem as mem
 import pyion.utils as utils
 
 # Import C Extensions
-try:
-    import _bp
-    import _cfdp
-    import _ltp
-except ImportError:
-    warn('_bp, _ltp, _cfdp extensions not available. Using mock instead.')
-    _bp, _ltp, _cfdp = Mock(), Mock(), Mock()
+import _bp
+import _cfdp
+import _ltp
 
 # Define all methods/vars exposed at pyion
 __all__ = ['get_bp_proxy', 'get_cfdp_proxy', 'get_ltp_proxy', 'get_sdr_proxy',
@@ -67,7 +63,9 @@ def get_bp_proxy(node_nbr):
         :return: BpProxy object
     """
     global _bp_proxies
-    return utils._register_proxy(_bp_proxies, str(node_nbr), BpProxy, node_nbr)
+    proxy = utils._register_proxy(_bp_proxies, str(node_nbr), BpProxy, node_nbr)
+    proxy.bp_attach()
+    return proxy
 
 def get_cfdp_proxy(peer_entity_nbr):
     """ Returns a CfdpProxy for a given peer entity number. If it already exists, it
@@ -77,7 +75,9 @@ def get_cfdp_proxy(peer_entity_nbr):
         :return: CfdpProxy object
     """
     global _cfdp_proxies
-    return utils._register_proxy(_cfdp_proxies, str(peer_entity_nbr), CfdpProxy, peer_entity_nbr)
+    proxy = utils._register_proxy(_cfdp_proxies, str(peer_entity_nbr), CfdpProxy, peer_entity_nbr)
+    proxy.cfdp_attach()
+    return proxy
 
 def get_ltp_proxy(client_id):
     """ Returns an LtpProxy for a given client application. If it already exists, it
@@ -87,7 +87,9 @@ def get_ltp_proxy(client_id):
         :return: LtpProxy object
     """
     global _ltp_proxies
-    return utils._register_proxy(_ltp_proxies, str(client_id), LtpProxy, client_id)
+    proxy = utils._register_proxy(_ltp_proxies, str(client_id), LtpProxy, client_id)
+    proxy.ltp_attach()
+    return proxy
 
 def get_sdr_proxy(node_nbr, sdr_name='ion'):
     """ Return an SdrProxy for a given client application. If it already exists, it
@@ -248,7 +250,7 @@ class BpProxy(utils.Proxy):
     def bp_open(self, eid, TTL=3600, priority=cst.BpPriorityEnum.BP_STD_PRIORITY,
                 report_eid=None, custody=cst.BpCustodyEnum.NO_CUSTODY_REQUESTED,
                 report_flags=cst.BpReportsEnum.BP_NO_RPTS, ack_req=cst.BpAckReqEnum.BP_NO_ACK_REQ,
-                retx_timer=0, chunk_size=None, timeout=None):
+                retx_timer=0, chunk_size=None, timeout=None, mem_ctrl=False):
         """ Open an endpoint. If it already exists, the existing instance
             is returned.
 
@@ -289,12 +291,12 @@ class BpProxy(utils.Proxy):
 
         # Open EID in ION. Get the address of the BpSapState as a long. If retx_timer>0, then
         # open the endpoint in "detained mode" (see bp_open_source in ION manual).
-        sap_addr = _bp.bp_open(eid, int(detained))
+        sap_addr = _bp.bp_open(eid, int(detained), int(mem_ctrl))
 
         # Create an endpoint
         ept_obj = bp.Endpoint(self, eid, sap_addr, TTL, int(priority), report_eid,
                               int(custody), int(report_flags), int(ack_req), 
-                              int(retx_timer), detained, chunk_size, timeout)
+                              int(retx_timer), detained, chunk_size, timeout, mem_ctrl)
 
         # Store it
         self._ept_map[eid] = ept_obj

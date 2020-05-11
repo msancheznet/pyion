@@ -23,11 +23,7 @@ import pyion.utils as utils
 from pyion.constants import BpEcsEnumeration
 
 # Import C Extension
-try:
-	import _bp
-except ImportError:
-	warn('_bp extension not available. Using mock instead.')
-	_bp = Mock()
+import _bp
 
 # Define all methods/vars exposed at pyion
 __all__ = ['Endpoint']
@@ -49,7 +45,7 @@ class Endpoint():
 	"""
 	def __init__(self, proxy, eid, sap_addr, TTL, priority, report_eid,
 				 custody, report_flags, ack_req, retx_timer, detained, 
-				 chunk_size, timeout):
+				 chunk_size, timeout, mem_ctrl):
 		""" Endpoint initializer  """
 		# Store variables
 		self.proxy        = proxy
@@ -66,6 +62,7 @@ class Endpoint():
 		self.chunk_size   = chunk_size
 		self.detained     = detained
 		self.timeout      = timeout
+		self.mem_ctrl     = mem_ctrl
 
 		# TODO: This properties are hard-coded because they are not 
 		# yet supported
@@ -73,7 +70,8 @@ class Endpoint():
 		self.criticality  = ~int(BpEcsEnumeration.BP_MINIMUM_LATENCY)
 
 		# Mark if the endpoint is blocked 
-		self.result = None
+		self.tx_result = None
+		self.rx_result = None
 
 	def __del__(self):
 		# If you have already been closed, return
@@ -133,11 +131,34 @@ class Endpoint():
 		if retx_timer>0 and not self.detained:
 			raise ConnectionError('This endpoint is not detained. You cannot set up custodial timers.')
 
+		# Create call arguments
+		args = (dest_eid, data, TTL, priority, report_eid, custody, report_flags,
+				ack_req, retx_timer, chunk_size)
+
+		# Open another thread because otherwise you cannot handle a SIGINT if blocked
+		# waiting for ZCO space
+		th = Thread(target=self._bp_send, args=args, daemon=True)
+		th.start()
+
+		# Wait for a bundle to be sent
+		th.join()
+
+		# If sending resulted in an exception, raise it
+		if isinstance(self.tx_result, BaseException):
+			raise self.tx_result
+
+	def _bp_send(self, dest_eid, data, TTL, priority, report_eid, custody, report_flags,
+				ack_req, retx_timer, chunk_size):
+		""" Send data through the proxy
+
+			:param dest_eid: Destination EID for this data
+			:param data: Data to send as ``bytes``, ``bytearray`` or a ``memoryview``
+			:param **kwargs: See ``Proxy.bp_open``
+		"""
 		# If you need to send in full, do it
 		if chunk_size is None:
-			_bp.bp_send(self._sap_addr, dest_eid, report_eid, TTL, priority,
-							  custody, report_flags, int(ack_req), retx_timer, 
-							  data)
+			self._bp_send_bundle(dest_eid, data, TTL, priority, report_eid, custody,
+				 				 report_flags, ack_req, retx_timer)
 			return
 
 		# If data is a string, then encode it to get a bytes object
@@ -150,9 +171,19 @@ class Endpoint():
 		# NOTE: If data is not a multiple of chunk_size, the memoryview
 		#  		object returns the correct end of the buffer.
 		for i in range(0, len(memv), chunk_size):
+			self._bp_send_bundle(dest_eid, memv[i:(i+chunk_size)].tobytes(), TTL, 
+								 priority, report_eid, custody, report_flags, 
+								 ack_req, retx_timer)
+
+	def _bp_send_bundle(self, dest_eid, data, TTL, priority, report_eid, custody,
+				 		report_flags, ack_req, retx_timer):
+		""" Transmit a bundle """
+		try:
 			_bp.bp_send(self._sap_addr, dest_eid, report_eid, TTL, priority,
-							  custody, report_flags, int(ack_req), retx_timer,
-							  memv[i:(i+chunk_size)].tobytes())
+						custody, report_flags, int(ack_req), retx_timer, data)
+			self.tx_result = None
+		except BaseException as e:
+			self.tx_result = e
 
 	def bp_send_file(self, dest_eid, file_path, **kwargs):
 		""" Convenience function to send a file
@@ -180,7 +211,7 @@ class Endpoint():
 		"""
 		# If no chunk size defined, simply get data in the next bundle
 		if chunk_size is None:
-			self.result = self._bp_receive_bundle()
+			self.rx_result = self._bp_receive_bundle()
 			return
 
 		# Pre-allocate buffer of the correct size and create a memory view
@@ -197,8 +228,8 @@ class Endpoint():
 			data = _bp.bp_receive(self._sap_addr)
 
 			# If data is of type exception, return
-			if isinstance(data, Exception):
-				self.result = data
+			if isinstance(data, BaseException):
+				self.rx_result = data
 				return
 
 			# Create memoryview to this bundle's payload
@@ -219,8 +250,8 @@ class Endpoint():
 			bytes_read += sz
 
 		# If there are extra bytes add them
-		self.result = memv.tobytes()
-		if extra_bytes: self.result += extra_bytes.tobytes()
+		self.rx_result = memv.tobytes()
+		if extra_bytes: self.rx_result += extra_bytes.tobytes()
 
 	@utils.in_ion_folder
 	def _bp_receive_bundle(self):
@@ -271,13 +302,13 @@ class Endpoint():
 		# Handle the case where you have timed-out
 		if th.is_alive():
 			self._bp_receive_timeout()
-			return self.result
+			return self.rx_result
 
 		# If exception, raise it
-		if isinstance(self.result, Exception):
-			raise self.result
+		if isinstance(self.rx_result, BaseException):
+			raise self.rx_result
 
-		return self.result
+		return self.rx_result
 
 	def _bp_receive_timeout(self):
 		# Interrupt the reception of bundles from ION. 

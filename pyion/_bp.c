@@ -188,6 +188,7 @@ typedef struct {
     BpSAP sap;
     SapStateEnum status;
     int detained;
+    ReqAttendant* attendant;
 } BpSapState;
 
 /* ============================================================================
@@ -226,7 +227,7 @@ static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
 static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
     // Define variables
     char *ownEid;
-    int detained, ok;
+    int detained, ok, mem_ctrl;
 
     // Allocate memory for state and initialize to zeros
     BpSapState *state = (BpSapState*)malloc(sizeof(BpSapState));
@@ -239,7 +240,7 @@ static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
     memset((char *)state, 0, sizeof(BpSapState));
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "si", &ownEid, &detained))
+    if (!PyArg_ParseTuple(args, "sii", &ownEid, &detained, &mem_ctrl))
         return NULL;
     
     // Open the endpoint. This call fills out the SAP information
@@ -261,12 +262,32 @@ static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
     state->status   = EID_IDLE;
     state->detained = (detained > 0);
 
+    // If you need ZCO memory control, create an attendant
+    if (mem_ctrl) {
+        // Allocate memory for new attendant
+        state->attendant = (ReqAttendant*)malloc(sizeof(ReqAttendant));
+        
+        // Initialize the attendant
+        if (ionStartAttendant(state->attendant)) {
+            pyion_SetExc(PyExc_RuntimeError, "Can't initialize memory attendant.");
+            return NULL;
+        }
+    } else {
+        state->attendant = NULL;
+    }
+
     // Return the memory address of the SAP for this endpoint as an unsined long
     PyObject *ret = Py_BuildValue("k", state);
     return ret;
 }
 
 static void close_endpoint(BpSapState *state) {
+    // Close and free attendant
+    if (state->attendant) {
+        ionStopAttendant(state->attendant);
+        free(state->attendant);
+    } 
+
     // Close this SAP
     bp_close(state->sap);
 
@@ -316,6 +337,9 @@ static PyObject *pyion_bp_interrupt(PyObject *self, PyObject *args) {
     state->status = EID_INTERRUPTING;
     bp_interrupt(state->sap);
 
+    // Pause the attendant
+    if (state->attendant) ionPauseAttendant(state->attendant);
+
     Py_RETURN_NONE;
 }
 
@@ -361,9 +385,12 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    // Create the ZCO object
+    // Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
+    // this is a blocking call. Therefore, release the GIL
+    Py_BEGIN_ALLOW_THREADS                                
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
-                             classOfService, 0, ZcoOutbound, NULL);
+                             classOfService, 0, ZcoOutbound, state->attendant);                                        
+    Py_END_ALLOW_THREADS
 
     // Handle error while creating ZCO object
     if (!bundleZco || bundleZco == (Object)ERROR) {
@@ -375,7 +402,6 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     // Send ZCO object using BP protocol.                            
     ok = bp_send(state->sap, destEid, reportEid, ttl, classOfService, custodySwitch,
                  rrFlags, ackReq, ancillaryData, bundleZco, &newBundle);
-                                    
 
     // Handle error in bp_send
     if (ok <= 0) {
