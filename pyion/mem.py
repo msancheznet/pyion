@@ -21,11 +21,7 @@ from warnings import warn
 import pyion.utils as utils
 
 # Import C Extension
-try:
-	import _mem
-except ImportError:
-	warn('_mem extension not available. Using mock instead.')
-	_mem = Mock()
+import _mem
 
 # Define all methods/vars exposed at pyion
 __all__ = ['SdrProxy', 'PsmProxy']

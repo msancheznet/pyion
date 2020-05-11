@@ -22,11 +22,7 @@ import pyion.utils as utils
 from pyion.constants import CfdpEventEnum
 
 # Import C Extension
-try:
-	import _cfdp
-except ImportError:
-	warn('_cfdp extension not available. Using mock instead.')
-	_cfdp = Mock()
+import _cfdp
 
 # Define all methods/vars exposed at pyion
 __all__ = ['Entity']

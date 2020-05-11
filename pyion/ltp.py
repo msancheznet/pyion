@@ -21,11 +21,7 @@ import pyion
 import pyion.utils as utils
 
 # Import C Extension
-try:
-	import _ltp
-except ImportError:
-	warn('_ltp extension not available. Using mock instead.')
-	_ltp = Mock()
+import _ltp
 
 # Define all methods/vars exposed at pyion
 __all__ = ['AccessPoint']

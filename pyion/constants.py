@@ -15,17 +15,8 @@ from unittest.mock import Mock
 from warnings import warn
 
 # Import C Extensions
-try:
-    import _bp
-except ImportError:
-    warn('_bp extension not available. Using mock instead.')
-    _bp = Mock()
-
-try:
-    import _cfdp
-except ImportError:
-    warn('_cfdp extension not available. Using mock instead.')
-    _cfdp = Mock()
+import _bp
+import _cfdp
 
 # Define all methods/vars exposed at pyion
 __all__ = [
