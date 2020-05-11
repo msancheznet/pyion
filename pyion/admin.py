@@ -17,11 +17,7 @@ from warnings import warn
 import pyion.utils as utils
 
 # Import C Extension
-try:
-	import _admin
-except ImportError:
-	warn('_admin extension not available. Using mock instead.')
-	_admin = Mock()
+import _admin
 
 # Define all methods/vars exposed at pyion
 _cgr    = ['cgr_list_contacts', 'cgr_list_ranges', 'cgr_add_contact', 
