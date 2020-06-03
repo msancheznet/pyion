@@ -79,7 +79,7 @@ class Endpoint():
 			return
 
 		# Close the Endpoint and free C memory
-		self.proxy.bp_close(self.eid)
+		self.proxy.bp_close(self)
 
 	@property
 	def is_open(self):
@@ -104,7 +104,7 @@ class Endpoint():
 		"""
 		if not self.is_open:
 			return
-		self.proxy.bp_close(self.eid)
+		self.proxy.bp_close(self)
 
 	@utils._chk_is_open
 	@utils.in_ion_folder
