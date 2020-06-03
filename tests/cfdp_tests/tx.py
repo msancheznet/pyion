@@ -127,7 +127,7 @@ else:
 finally:
     # Close entitity and endpoint
     cpxy.cfdp_close(peer_nbr)
-    bpxy.bp_close(orig_eid)
+    bpxy.bp_close(ept)
 
     # Clear network rules
     #npxy.delete_rules()

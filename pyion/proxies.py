@@ -306,19 +306,23 @@ class BpProxy(utils.Proxy):
 
     @utils._chk_attached
     @utils.in_ion_folder
-    def bp_close(self, eid):
+    def bp_close(self, ept):
         """ Close an endpoint. If it is not open, ``ConnectionError`` is raised.
 
-            :param: EID
+            :param: Endpoint object to close
         """
+        # If object passed is not endpoint, fail
+        if not isinstance(ept, bp.Endpoint):
+            raise ValueError('Input is not an endpoint')
+
         # Interrupt this endpoint first. 
         try:
-            self.bp_interrupt(eid)
+            self.bp_interrupt(ept.eid)
         except ConnectionError:
-            raise ConnectionError('Cannot close endpoint {}. It is not open.'.format(eid))
+            raise ConnectionError('Cannot close endpoint {}. It is not open.'.format(ept.eid))
 
         # Get SAP address in memory.
-        ept_obj = self._ept_map.pop(eid)
+        ept_obj = self._ept_map.pop(ept.eid)
 
         # If already closed, you are done
         if not ept_obj.is_open:
