@@ -225,7 +225,7 @@ class BpProxy(utils.Proxy):
 
             :return: Tuple of EIDS
         """
-        return tuple(getattr(self, '_ept_map', {}).keys())
+        return tuple(getattr(self, '_ept_map', {}).values())
 
     @utils.in_ion_folder
     def bp_attach(self):
@@ -313,11 +313,11 @@ class BpProxy(utils.Proxy):
         """
         # If object passed is not endpoint, fail
         if not isinstance(ept, bp.Endpoint):
-            raise ValueError('Input is not an endpoint')
+            raise ValueError('Expected an Enpoint instance')
 
         # Interrupt this endpoint first. 
         try:
-            self.bp_interrupt(ept.eid)
+            self.bp_interrupt(ept)
         except ConnectionError:
             raise ConnectionError('Cannot close endpoint {}. It is not open.'.format(ept.eid))
 
@@ -336,21 +336,22 @@ class BpProxy(utils.Proxy):
 
     @utils._chk_attached
     @utils.in_ion_folder
-    def bp_interrupt(self, eid):
+    def bp_interrupt(self, ept):
         """ Interrupt and endpoint while receiving data. If it is not open, ``ConnectionError`` is raised.
             If this endpoint is not blocked receiving, this call has no effect.
 
-            :param str: EID
+            :param: Endpoint object to close
         """
+        # If object passed is not endpoint, fail
+        if not isinstance(ept, bp.Endpoint):
+            raise ValueError('Expected an Enpoint instance')
+        
         # If this EID is not open, return
-        if not self.is_endpoint_open(eid):
-            raise ConnectionError('Cannot interrupt endpoint {}. It is not open.'.format(eid))
+        if not self.is_endpoint_open(ept.eid):
+            raise ConnectionError('Cannot interrupt endpoint {}. It is not open.'.format(ept.eid))
 
-        # Get SAP address in memory.
-        ept_obj = self._ept_map[eid]
-
-        # Close EID in ION
-        _bp.bp_interrupt(ept_obj._sap_addr)
+        # Interrupt endpoint in ION
+        _bp.bp_interrupt(ept._sap_addr)
 
         # This is little hack to ensure that SIGINT prints "interrupted" as opposed
         # to raising ConnectionAbortedError. However, this is not guaranteed
