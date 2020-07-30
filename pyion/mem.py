@@ -126,7 +126,7 @@ class MemoryProxy(utils.Proxy, abc.ABC):
             self._results['large_pool'][t] = large_pool
 
             # Sleep for a while
-            self._rate.sleep()
+            if self._rate: self._rate.sleep()
 
     def stop_monitoring(self):
         """ Stop monitoring the SDR and return results"""

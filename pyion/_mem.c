@@ -86,8 +86,6 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
 
     // Attach to SDR
     sdr = getIonsdr();
-
-    // If could not attach, raise error
     if (sdr == NULL) {
         pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's SDR.");
         return NULL;
@@ -111,8 +109,6 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     // Head data, all in [bytes]
     size_t hp_size  = sdrUsage.heapSize;
     size_t hp_avail = sdrUsage.unusedSize;
-    size_t hp_used  = hp_size - (sp_avail+lp_avail+hp_avail);
-    size_t hp_max_u = hp_size - hp_avail;
 
     // Get the amount of blocks available in the small pool
     for (i = 0; i < SMALL_SIZES; i++) {
@@ -131,7 +127,7 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     }
 
     // Return summary statistics in a dictionary
-    PyObject *ret = Py_BuildValue("({s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k}, O, O)",
+    PyObject *ret = Py_BuildValue("({s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k}, O, O)",
                          "small_pool_avail",  (unsigned long)sp_avail,
                          "small_pool_used",   (unsigned long)sp_used,
                          "small_pool_total",  (unsigned long)sp_total,
@@ -140,8 +136,6 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
                          "large_pool_total",  (unsigned long)lp_total,
                          "heap_size",         (unsigned long)hp_size,
                          "heap_avail",        (unsigned long)hp_avail,
-                         "heap_used",         (unsigned long)hp_used,
-                         "max_heap_used",     (unsigned long)hp_max_u,
                          sp_blocks, lp_blocks );
 
     return ret;
@@ -161,10 +155,16 @@ static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
     size_t          sp_blk_size = 0;
     size_t          lp_blk_size = WORD_SIZE;
 
+    // Attach to SDR
+    psm = getIonwm();
+    if (psm == NULL) {
+        pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's PSM.");
+        return NULL;
+    }
+
     // Get the state of the PSM
     // NOTE: Do not protect with transaction to save effort (and because
     // you do not care if another thread jumps in line)
-    psm = getIonwm();
     psm_usage(psm, &psmUsage);
 
     // Get amount of data available in small pool [bytes]
