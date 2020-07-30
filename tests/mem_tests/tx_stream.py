@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 """
-# Sends 'bping' from ipn:1.1 to ipn:2.1. Use ``text_rx``
-# at the receiver
+# Sends a stream of bundles to the receiver until user terminates
+# with Ctrl+C
 #
 # Author: Marc Sanchez Net
 # Date:   04/15/2019
@@ -21,7 +21,6 @@ import time
 
 # Import module
 import pyion
-from pyion import BpCustodyEnum, BpPriorityEnum, BpReportsEnum
 
 # =================================================================
 # === Define global variables
@@ -35,44 +34,45 @@ orig_eid = 'ipn:1.1'
 dest_eid = 'ipn:2.1'
 
 # [Hz] Rate at which the SDR is monitored
-rate = 1
+rate = 100
+
+# [sec] Timespan of consecutive measurements
+timespan = 60*0.5
 
 # =================================================================
 # === MAIN
 # =================================================================
 
-# Create a proxy to ION, SDR and PSM
+# Create a proxy to ION, the SDR and the PSM
 proxy = pyion.get_bp_proxy(node_nbr)
 sdr   = pyion.get_sdr_proxy(node_nbr)
 psm   = pyion.get_psm_proxy(node_nbr)
 
 # Start monitoring
-sdr.start_monitoring(rate=rate)
-psm.start_monitoring(rate=rate)
+sdr.start_monitoring(rate=rate, timespan=timespan, print_results=True)
+psm.start_monitoring(rate=rate, timespan=timespan, print_results=True)
 
 # Open a endpoint and set its properties. Then send file
 with proxy.bp_open(orig_eid) as eid:
-    try:
-        for i in range(500):
-            eid.bp_send(dest_eid, str(datetime.now()) + ' - ' + 'a'*100)
-    except MemoryError:
-        summary, small_pool, large_pool = sdr.dump()
-        print(summary)
-        raise
+    while True:
+        try:
+            msg = '{} - {}'.format(datetime.now(), 'a'*100)
+            eid.bp_send(dest_eid, msg)
+            time.sleep(0.1)
+        except MemoryError:
+            summary, small_pool, large_pool = sdr.dump()
+            print(summary)
+            raise
+        except InterruptedError:
+            break
 
 # Get SDR results
 sdr_res = sdr.stop_monitoring()
 pprint(sdr_res)
-#sdr_sum = pd.DataFrame.from_dict(sdr_res['summary']).T
-#sdr_spl = pd.DataFrame.from_dict(sdr_res['small_pool'], orient='index')
-#sdr_lpl = pd.DataFrame.from_dict(sdr_res['large_pool'], orient='index')
 
 # Get PSM results
 psm_res = psm.stop_monitoring()
 pprint(psm_res)
-#psm_sum = pd.DataFrame.from_dict(sdr_res['summary']).T
-#psm_spl = pd.DataFrame.from_dict(sdr_res['small_pool'], orient='index')
-#psm_lpl = pd.DataFrame.from_dict(sdr_res['large_pool'], orient='index')
 
 # =================================================================
 # === EOF

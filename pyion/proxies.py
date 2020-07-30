@@ -91,32 +91,25 @@ def get_ltp_proxy(client_id):
     proxy.ltp_attach()
     return proxy
 
-def get_sdr_proxy(node_nbr, sdr_name='ion'):
+def get_sdr_proxy(node_nbr):
     """ Return an SdrProxy for a given client application. If it already exists, it
         gives you th ealready instantiated copy
 
         :param: Node number
-        :param: See ``sdrName`` in ``ionconfig``. Default is ``ion``.
         :return: SdrProxy object
     """
     global _sdr_proxies
-    return utils._register_proxy(_sdr_proxies, str((node_nbr, sdr_name)), mem.SdrProxy, 
-                                 node_nbr, sdr_name)
+    return utils._register_proxy(_sdr_proxies, node_nbr, mem.SdrProxy, node_nbr)
 
-def get_psm_proxy(node_nbr, wm_key=65281, wm_size=0, partition_name=-1):
+def get_psm_proxy(node_nbr):
     """ Return a PsmProxy for a given client application. If it already exists, it
         gives you th ealready instantiated copy
 
         :param node_nbr: Node number
-        :param wm_key: See ``wmKey`` in ``ionconfig``. Default is 65281
-        :param wm_size: Unused
-        :param partition_name: Unused
         :return: PsmProxy object
     """
     global _psm_proxies
-    return utils._register_proxy(_psm_proxies, str((node_nbr, wm_key)), mem.PsmProxy,
-                                node_nbr, wm_key, wm_size=wm_size, 
-                                partition_name=partition_name)
+    return utils._register_proxy(_psm_proxies, node_nbr, mem.PsmProxy, node_nbr)
 
 def shutdown():
     """ Shutdowns pyion: All endpoints, access points, etc. """

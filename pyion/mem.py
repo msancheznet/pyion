@@ -12,6 +12,7 @@
 # Generic imports
 import abc
 from collections import defaultdict
+from pprint import pprint
 from unittest.mock import Mock
 from threading import Thread
 import time
@@ -40,7 +41,9 @@ class MemoryProxy(utils.Proxy, abc.ABC):
         self._th         = None
         self._monitor_on = False
         self._rate       = None
-        self._results    = None
+        self._tspan      = -1
+        self._print_res  = False
+        self._results    = defaultdict(dict)
 
     @abc.abstractmethod
     def dump(self):
@@ -61,10 +64,21 @@ class MemoryProxy(utils.Proxy, abc.ABC):
         # Delete results
         del self._results
 
-    def start_monitoring(self, rate=1):
+    def clean_results(self):
+        """ Clean all stored results """
+        self._results = defaultdict(dict)
+
+    def start_monitoring(self, rate=1, timespan=-1, print_results=False):
         """ Start monitoring the SDR for a while
             
             :param int rate: Rate in [Hz]
+            :param float timespan: Span of time during which measurements
+                                   are taken. After that, the measurements
+                                   are deleted and new data is acquired.
+                                   The default value of -1 indicates that
+                                   measurements are never deleted.
+            :param float print_results: If True, the state of the memory is printed
+                                        to stdout prior to being deleted
         """
         # If a monitoring session is already on, error
         if self._monitor_on:
@@ -73,27 +87,43 @@ class MemoryProxy(utils.Proxy, abc.ABC):
         # Prepare monitoring session
         self._rate       = utils.Rate(rate)
         self._monitor_on = True
-        self._results    = defaultdict(dict)
+        self._tspan      = timespan
+        self._print_res  = print_results
 
         # Start monitor in separate thread
         self._th = Thread(target=self._start_monitoring, daemon=True)
         self._th.start()
 
     def _start_monitoring(self):
+        # Initialize variables
+        tic = time.time()
+        summary = {}
+
         while self._monitor_on:
             # Measurement index
             t = time.time()
 
+            # If enough time has elapsed, clear the results
+            if self._tspan > 0 and time.time()-tic >= self._tspan:
+                # Print if necessary
+                if self._print_res: 
+                    print('Num. measurements:', len(self._results['summary']))
+                    pprint(summary)
+
+                # Clean results and restart time counter
+                self.clean_results()
+                tic = time.time()
+
             # Take measurement
             try:
                 summary, small_pool, large_pool = self.dump()
-                self._results['summary'][t]    = summary
-                self._results['small_pool'][t] = small_pool
-                self._results['large_pool'][t] = large_pool
             except Exception as e:
-                self._results['summary'][t]    = e
-                self._results['small_pool'][t] = None
-                self._results['large_pool'][t] = None
+                summary, small_pool, large_pool = e, None, None
+
+            # Store results
+            self._results['summary'][t]    = summary
+            self._results['small_pool'][t] = small_pool
+            self._results['large_pool'][t] = large_pool
 
             # Sleep for a while
             self._rate.sleep()
@@ -105,6 +135,8 @@ class MemoryProxy(utils.Proxy, abc.ABC):
 
         # Signal exit to the monitor thread
         self._monitor_on = False
+        self._rate = None
+        self._tspan = -1
 
         # Wait for monitoring thread to exit
         self._th.join()
@@ -112,6 +144,8 @@ class MemoryProxy(utils.Proxy, abc.ABC):
         # Return collected results
         return self._results
 
+    def __str__(self):
+        return '<{}>'.format(self.__class__.__name__)
 
 # ============================================================================
 # === SDR PROXY
@@ -123,13 +157,6 @@ class SdrProxy(MemoryProxy):
         :ivar int: Node number
         :ivar str: SDR name (see ``ionconfig``, option ``sdrName``)
     """
-    def __init__(self, node_nbr, sdr_name):
-        # Call parent constructor
-        super().__init__(node_nbr)
-
-        # Store SDR name
-        self.sdr_name = sdr_name
-
     @utils.in_ion_folder
     def dump(self):
         """ Dump the current state of the SDR 
@@ -137,10 +164,7 @@ class SdrProxy(MemoryProxy):
         :return Tuple[Dict]: usage summary, small pool free block count,
                              large pool free block count
         """
-        return _mem.sdr_dump(self.sdr_name)
-
-    def __str__(self):
-        return '<{}: {}>'.format(self.__class__.__name__, self.sdr_name)
+        return _mem.sdr_dump()
 
 # ============================================================================
 # === PSM PROXY
@@ -154,15 +178,6 @@ class PsmProxy(MemoryProxy):
         :ivar int wm_size: Unused
         :ivar str partition_name: Unused
     """
-    def __init__(self, node_nbr, wm_key=65281, wm_size=0, partition_name=-1):
-        # Call parent constructor
-        super().__init__(node_nbr)
-
-        # Store variables to identify the PSM
-        self.wm_key   = int(wm_key)
-        self._wm_size = int(wm_size)
-        self._part_id = str(wm_key)
-
     @utils.in_ion_folder
     def dump(self):
         """ Dump the current state of the PSM
@@ -170,7 +185,4 @@ class PsmProxy(MemoryProxy):
             :return Tuple[Dict]: usage summary, small pool free block count,
                                  large pool free block count
         """
-        return _mem.psm_dump(self.wm_key, self._wm_size, self._part_id)
-
-    def __str__(self):
-        return '<{}: {}>'.format(self.__class__.__name__, self.wm_key)
+        return _mem.psm_dump()

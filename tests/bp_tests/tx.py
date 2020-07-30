@@ -52,12 +52,12 @@ proxy = pyion.get_bp_proxy(node_nbr)
 # =================================================================
 
 # Open endpoint to get reports
-rpt_eid = proxy.bp_open(rept_eid)
+rpt = proxy.bp_open(rept_eid)
 
 def print_reports():
     while True:
         try:
-            data = rpt_eid.bp_receive()
+            data = rpt.bp_receive()
             print(data)
         except InterruptedError:
             break
@@ -74,8 +74,8 @@ def send_data(ept):
     # Counter of total bytes sent
     total_sent = 0
 
-    for i in range(50):
-        msg = str(datetime.now()) + ' - ' + 'a'*1000
+    for i in range(1000):
+        msg = str(datetime.now()) + ' - ' + 'a'*10000
         print('{}) Sending {} bytes'.format(i+1, sys.getsizeof(msg)))
         ept.bp_send(dest_eid, msg)
         total_sent += sys.getsizeof(msg)
@@ -88,7 +88,7 @@ with proxy.bp_open(orig_eid, **ept_props) as ept:
     
 # Sleep for a while and stop the monitoring thread
 time.sleep(2)
-proxy.bp_interrupt(rept_eid)
+proxy.bp_interrupt(rpt)
 th.join()
 
 # =================================================================
