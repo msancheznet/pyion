@@ -48,14 +48,14 @@ psm = pyion.get_psm_proxy(1)
 # =================================================================
 
 # Start monitoring
-sdr.start_monitoring(rate=100)
-psm.start_monitoring(rate=100)
+sdr.start_monitoring(rate=1, timespan=10, print_results=True)
+psm.start_monitoring(rate=1, timespan=10, print_results=True)
 
 # Open a endpoint and set its properties. Then send file
-with proxy.bp_open(orig_eid) as eid:
+with proxy.bp_open(orig_eid, mem_ctrl=True) as eid:
     try:
-        for i in range(500):
-            eid.bp_send(dest_eid, str(datetime.now()) + ' - ' + 'a'*100)
+        for i in range(5000):
+            eid.bp_send(dest_eid, str(datetime.now()) + ' - ' + 'a'*1000)
     except MemoryError:
         summary, small_pool, large_pool = sdr.dump()
         print(summary)

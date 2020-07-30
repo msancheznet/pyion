@@ -193,7 +193,7 @@ _ltp = Extension('_ltp',
 # Define the ION memory extension and related directories
 _mem = Extension('_mem',
                 include_dirs=[str(ion_inc)],
-                libraries=['ici'],
+                libraries=['ici', 'bp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_mem.c'],
                 extra_compile_args=compile_args

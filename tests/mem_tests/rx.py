@@ -75,7 +75,7 @@ with proxy.bp_open(EID) as eid:
                 nbnd += 1
                 nbytes += sys.getsizeof(data)
                 elapsed = (time.time() - tic)
-                print('{}) Total bytes {} / {} seconds = {} bytes/sec'.format(nbnd, nbytes, elapsed, nbytes/elapsed))
+                print('{}) Total bytes {} / {:.3f} seconds = {:.2f} bytes/sec'.format(nbnd, nbytes, elapsed, nbytes/elapsed))
             except UnicodeDecodeError:
                 print(data)
         except InterruptedError:

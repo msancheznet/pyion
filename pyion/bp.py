@@ -74,12 +74,8 @@ class Endpoint():
 		self.rx_result = None
 
 	def __del__(self):
-		# If you have already been closed, return
-		if not self.is_open:
-			return
-
-		# Close the Endpoint and free C memory
-		self.proxy.bp_close(self.eid)
+		# Close endpoint if necessary
+		self.close()
 
 	@property
 	def is_open(self):
@@ -96,12 +92,8 @@ class Endpoint():
 		self._sap_addr = None
 		self.proxy     = None
 
-	def _close(self):
-		""" Close this endpoint if necessary.
-
-			.. Danger:: DO NOT call this function directly. Use the Proxy ``close``
-						function instead
-		"""
+	def close(self):
+		""" Close this endpoint if necessary. """
 		if not self.is_open:
 			return
 		self.proxy.bp_close(self.eid)
@@ -320,7 +312,7 @@ class Endpoint():
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		""" Allows an endpoint to be used as context manager """
-		pass
+		self.close()
 
 	def __str__(self):
 		return '<Endpoint: {} ({})>'.format(self.eid, 'Open' if self.is_open else 'Closed')

@@ -74,8 +74,8 @@ def send_data(ept):
     # Counter of total bytes sent
     total_sent = 0
 
-    for i in range(50):
-        msg = str(datetime.now()) + ' - ' + 'a'*1000
+    for i in range(500):
+        msg = str(datetime.now()) + ' - ' + 'a'*10000
         print('{}) Sending {} bytes'.format(i+1, sys.getsizeof(msg)))
         ept.bp_send(dest_eid, msg)
         total_sent += sys.getsizeof(msg)
