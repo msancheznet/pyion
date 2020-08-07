@@ -56,6 +56,7 @@ with proxy.bp_open(orig_eid, mem_ctrl=True) as eid:
     try:
         for i in range(5000):
             eid.bp_send(dest_eid, str(datetime.now()) + ' - ' + 'a'*1000)
+            time.sleep(1)
     except MemoryError:
         summary, small_pool, large_pool = sdr.dump()
         print(summary)

@@ -92,7 +92,9 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     }
 
     // Get the state of the SDR
+    if (!sdr_pybegin_xn(sdr)) return NULL;
     sdr_usage(sdr, &sdrUsage);
+    sdr_pyexit_xn(sdr);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = sdrUsage.smallPoolFree;
