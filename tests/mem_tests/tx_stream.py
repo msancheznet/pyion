@@ -37,7 +37,7 @@ dest_eid = 'ipn:2.1'
 rate = 100
 
 # [sec] Timespan of consecutive measurements
-timespan = 60*0.5
+timespan = 5
 
 # =================================================================
 # === MAIN

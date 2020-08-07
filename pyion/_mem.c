@@ -92,9 +92,10 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     }
 
     // Get the state of the SDR
-    // NOTE: Do not protect with transaction to save effort (and because
-    // you do not care if another thread jumps in line)
+    // NOTE: sdr_usage needs to be in a transaction even though it is a read operation
+    if (!sdr_pybegin_xn(sdr)) return NULL;     
     sdr_usage(sdr, &sdrUsage);
+    sdr_pyexit_xn(sdr);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = sdrUsage.smallPoolFree;
@@ -163,8 +164,6 @@ static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
     }
 
     // Get the state of the PSM
-    // NOTE: Do not protect with transaction to save effort (and because
-    // you do not care if another thread jumps in line)
     psm_usage(psm, &psmUsage);
 
     // Get amount of data available in small pool [bytes]
