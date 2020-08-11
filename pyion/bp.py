@@ -74,12 +74,8 @@ class Endpoint():
 		self.rx_result = None
 
 	def __del__(self):
-		# If you have already been closed, return
-		if not self.is_open:
-			return
-
-		# Close the Endpoint and free C memory
-		self.proxy.bp_close(self)
+		# Attempt to close prior to deleting
+		self.close()
 
 	@property
 	def is_open(self):
@@ -90,18 +86,14 @@ class Endpoint():
 		""" Deletes eid and sap_addr information to indicate that this endpoint is closed
 
 			.. Danger:: DO NOT call this function directly. Use the Proxy ``close``
-						function instead
+						function instead, or the enpoint close
 		"""
 		self.eid  	   = None
 		self._sap_addr = None
 		self.proxy     = None
 
-	def _close(self):
-		""" Close this endpoint if necessary.
-
-			.. Danger:: DO NOT call this function directly. Use the Proxy ``close``
-						function instead
-		"""
+	def close(self):
+		""" Close this endpoint if necessary. """
 		if not self.is_open:
 			return
 		self.proxy.bp_close(self)
@@ -312,7 +304,7 @@ class Endpoint():
 
 	def _bp_receive_timeout(self):
 		# Interrupt the reception of bundles from ION. 
-		self.proxy.bp_interrupt(self.eid)
+		self.proxy.bp_interrupt(self)
 
 	def __enter__(self):
 		""" Allows an endpoint to be used as context manager """
@@ -320,7 +312,7 @@ class Endpoint():
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		""" Allows an endpoint to be used as context manager """
-		pass
+		self.close()
 
 	def __str__(self):
 		return '<Endpoint: {} ({})>'.format(self.eid, 'Open' if self.is_open else 'Closed')

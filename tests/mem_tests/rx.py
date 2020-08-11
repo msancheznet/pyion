@@ -25,24 +25,18 @@ import pyion
 # === Define global variables
 # =================================================================
 
-# Set environment variables for ION
-pyion.ION_NODE_LIST_DIR = './nodes'
-
 # ION node number
 node_nbr = 2
 
 # Endpoint to listen to
 EID = 'ipn:2.1'
 
-# Create a proxy to ION's BP
-proxy = pyion.get_bp_proxy(node_nbr)
-
-# Attach to ION
-proxy.bp_attach()
-
 # =================================================================
 # === MAIN
 # =================================================================
+
+# Create a proxy to ION's BP
+proxy = pyion.get_bp_proxy(node_nbr)
 
 # Open a proxy to receive data
 with proxy.bp_open(EID) as eid:
@@ -75,7 +69,7 @@ with proxy.bp_open(EID) as eid:
                 nbnd += 1
                 nbytes += sys.getsizeof(data)
                 elapsed = (time.time() - tic)
-                print('{}) Total bytes {} / {} seconds = {} bytes/sec'.format(nbnd, nbytes, elapsed, nbytes/elapsed))
+                print('{}) Total bytes {} / {:.3f} seconds = {:.1f} bytes/sec'.format(nbnd, nbytes, elapsed, nbytes/elapsed))
             except UnicodeDecodeError:
                 print(data)
         except InterruptedError:

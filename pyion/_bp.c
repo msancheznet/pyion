@@ -372,21 +372,21 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     // Initialize variables
     sdr = bp_get_sdr();
 
-    // Start SDR transaction
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-
     // Insert data to SDR
+    if (!sdr_pybegin_xn(sdr)) return NULL;
     bundleSdr = sdr_insert(sdr, data, (size_t)data_size);
+    if (!sdr_pyend_xn(sdr)) return NULL;
 
     // If insert failed, cancel transaction and exit
     if (!bundleSdr) {
-        sdr_cancel_xn(sdr);
         pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
         return NULL;
     }
 
-    // Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
-    // this is a blocking call. Therefore, release the GIL
+    // NOTE 1: Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
+    // this is a blocking call. Therefore, release the GIL.
+    // NOTE 2: Since this is blocking call, you cannot be in an SDR transaction. Otherwise you will
+    // have a three-way deadlock.
     Py_BEGIN_ALLOW_THREADS                                
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
                              classOfService, 0, ZcoOutbound, state->attendant);                                        
@@ -394,7 +394,6 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
 
     // Handle error while creating ZCO object
     if (!bundleZco || bundleZco == (Object)ERROR) {
-        sdr_cancel_xn(sdr);
         pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
         return NULL;
     }
@@ -405,7 +404,6 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
 
     // Handle error in bp_send
     if (ok <= 0) {
-        sdr_cancel_xn(sdr);
         pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", ok);
         return NULL;
     }
@@ -418,7 +416,6 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
 
         // Handle error in bp_memo
         if (ok < 0) {
-            sdr_cancel_xn(sdr);
             pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", ok);
             return NULL;
         }
@@ -426,9 +423,6 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
 
     // If you have opened this endpoint in detained mode, you need to release the bundle
     if (state->detained) bp_release(newBundle);
-
-    // End SDR transaction
-    if (!sdr_pyend_xn(sdr)) return NULL;
 
     // Return True to indicate success
     Py_RETURN_TRUE;

@@ -79,32 +79,23 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     int             i;
     Sdr		        sdr;
 	SdrUsageSummary	sdrUsage;
-    char            *sdrName;
     PyObject        *sp_blocks = PyDict_New();
     PyObject        *lp_blocks = PyDict_New();
     size_t          sp_blk_size = 0;
     size_t          lp_blk_size = WORD_SIZE;
 
-    // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "s", &sdrName)) {
-        pyion_SetExc(PyExc_ValueError, "Cannot parse arguments");
-        return NULL;
-    }
-
-    // Attach to SDR and start using it
-    sdr_initialize(0, NULL, SM_NO_KEY, NULL);
-    sdr = sdr_start_using(sdrName);
-
-    // If could not attach, raise error
+    // Attach to SDR
+    sdr = getIonsdr();
     if (sdr == NULL) {
-        pyion_SetExc(PyExc_MemoryError, "Could not attach to SDR with name '%s'.", sdrName);
+        pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's SDR.");
         return NULL;
     }
 
     // Get the state of the SDR
-    if (!sdr_pybegin_xn(sdr)) return NULL;
+    // NOTE: sdr_usage needs to be in a transaction even though it is a read operation
+    if (!sdr_pybegin_xn(sdr)) return NULL;     
     sdr_usage(sdr, &sdrUsage);
-    if (!sdr_pyend_xn(sdr)) return NULL;
+    sdr_pyexit_xn(sdr);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = sdrUsage.smallPoolFree;
@@ -119,8 +110,6 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     // Head data, all in [bytes]
     size_t hp_size  = sdrUsage.heapSize;
     size_t hp_avail = sdrUsage.unusedSize;
-    size_t hp_used  = hp_size - (sp_avail+lp_avail+hp_avail);
-    size_t hp_max_u = hp_size - hp_avail;
 
     // Get the amount of blocks available in the small pool
     for (i = 0; i < SMALL_SIZES; i++) {
@@ -138,11 +127,8 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
         PyDict_SetItem(lp_blocks, key, val);
     }
 
-    // Stop using the SDR
-    sdr_stop_using(sdr);
-
     // Return summary statistics in a dictionary
-    return Py_BuildValue("({s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k}, O, O)",
+    PyObject *ret = Py_BuildValue("({s:k, s:k, s:k, s:k, s:k, s:k, s:k, s:k}, O, O)",
                          "small_pool_avail",  (unsigned long)sp_avail,
                          "small_pool_used",   (unsigned long)sp_used,
                          "small_pool_total",  (unsigned long)sp_total,
@@ -151,9 +137,9 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
                          "large_pool_total",  (unsigned long)lp_total,
                          "heap_size",         (unsigned long)hp_size,
                          "heap_avail",        (unsigned long)hp_avail,
-                         "heap_used",         (unsigned long)hp_used,
-                         "max_heap_used",     (unsigned long)hp_max_u,
                          sp_blocks, lp_blocks );
+
+    return ret;
 }
 
 /* ============================================================================
@@ -162,36 +148,20 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
     // Define variables
-    int             memKey, i;
-    long long       memSize;
-    char            *partitionName;
-    char		    *memory = NULL;
-    uaddr		    smId = 0;
-	PsmView		    memView;
-	PsmPartition    psm = &memView;
-    int		        memmgrIdx;
+    int             i;
+    PsmPartition    psm;
     PsmUsageSummary	psmUsage;
     PyObject        *sp_blocks = PyDict_New();
     PyObject        *lp_blocks = PyDict_New();
     size_t          sp_blk_size = 0;
     size_t          lp_blk_size = WORD_SIZE;
 
-    // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "iLs", &memKey, &memSize, &partitionName))
+    // Attach to SDR
+    psm = getIonwm();
+    if (psm == NULL) {
+        pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's PSM.");
         return NULL;
-
-    // Initialize IPC
-    if (sm_ipc_init() < 0) {
-        pyion_SetExc(PyExc_MemoryError, "IPC initialization failed.");
-        return NULL;
-	}
-
-    // Open memory manager
-    if (memmgr_open(memKey, memSize, &memory, &smId, partitionName, &psm,
-				&memmgrIdx, NULL, NULL, NULL, NULL) < 0) {
-        pyion_SetExc(PyExc_MemoryError, "Can't attach to PSM with key '%i'.", memKey);
-        return NULL;
-	}
+    }
 
     // Get the state of the PSM
     psm_usage(psm, &psmUsage);
@@ -236,5 +206,5 @@ static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
                          "large_pool_total",  (unsigned long)lp_total,
                          "wm_size",           (unsigned long)wm_size,
                          "wm_avail",          (unsigned long)wm_avail,
-                         sp_blocks, lp_blocks );
+                         sp_blocks, lp_blocks);
 }
