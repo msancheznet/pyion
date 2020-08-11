@@ -162,7 +162,7 @@ _bp = Extension('_bp',
 _cfdp = Extension('_cfdp',
                 include_dirs=[str(ion_inc), str(cfdp_inc)],    
                 libraries=['cfdp', 'ici'],
-                library_dirs=[str(ion_lib), str(cfdp_lib)], # Is this a bug?
+                library_dirs=[str(ion_lib), str(cfdp_lib)],
                 sources=['./pyion/_cfdp.c'],
                 extra_compile_args=compile_args
                 )
@@ -179,7 +179,7 @@ _ltp = Extension('_ltp',
 # Define the ION memory extension and related directories
 _mem = Extension('_mem',
                 include_dirs=[str(ion_inc)],
-                libraries=['ici', 'bp'],
+                libraries=['ici', 'bp'],        # bp is required
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_mem.c'],
                 extra_compile_args=compile_args
