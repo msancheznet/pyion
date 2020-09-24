@@ -396,9 +396,11 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    // Send ZCO object using BP protocol.                            
+    // Send ZCO object using BP protocol.  
+    Py_BEGIN_ALLOW_THREADS                           
     ok = bp_send(state->sap, destEid, reportEid, ttl, classOfService, custodySwitch,
                  rrFlags, ackReq, ancillaryData, bundleZco, &newBundle);
+    Py_END_ALLOW_THREADS
 
     // Handle error in bp_send
     if (ok <= 0) {
