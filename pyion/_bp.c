@@ -187,7 +187,7 @@ PyMODINIT_FUNC PyInit__bp(void) {
 
 static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
     // Try to attach to BP agent
-    if (bp_attach() < 0) {
+    if (base_bp_attach() < 0) {
         pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
         return NULL;
     }
@@ -345,7 +345,9 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     BpSapState *state = NULL;
 
 
-    int status;
+    int status; //return status of bp_send
+
+
     // Parse input arguments. First one is SAP memory address for this endpoint
     if (!PyArg_ParseTuple(args, "ksziiiiiIs#", (unsigned long *)&state, &destEid, &reportEid, &ttl,
                           &classOfService, (int *)&custodySwitch, &rrFlags, &ackReq, &retxTimer,
@@ -354,10 +356,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
 
     
 
-    // NOTE 1: Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
-    // this is a blocking call. Therefore, release the GIL.
-    // NOTE 2: Since this is blocking call, you cannot be in an SDR transaction. Otherwise you will
-    // have a three-way deadlock.
+    // Release the GIL
      
     Py_BEGIN_ALLOW_THREADS                                
            status = base_bp_send(destEid, reportEid, ttl, classOfService,

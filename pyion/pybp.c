@@ -29,6 +29,15 @@ typedef struct
     ReqAttendant *attendant;
 } BpSapState;
 
+int base_bp_attach() {
+    int result = bp_attach();
+
+    return result;
+}
+
+
+
+
 /**
  * 
  * Base-level function to send a bundle through
@@ -45,11 +54,9 @@ int base_bp_send(char *destEid, char *reportEid, int ttl, int classOfService,
 
     Object newBundle;
     BpSapState *state = NULL;
-
     const char *data = NULL;
     Sdr sdr = NULL;
     Object bundleZco;
-
     Object bundleSdr;
     int ok;
 
