@@ -51,6 +51,7 @@
 #include <Python.h>
 
 #include "_utils.c"
+#include "pybp.c"
 
 /* ============================================================================
  * === _bp module definitions
@@ -173,23 +174,6 @@ PyMODINIT_FUNC PyInit__bp(void) {
  * === Define structures for this module
  * ============================================================================ */
 
-// Possible states of an enpoint. This is used to avoid race conditions
-// when closing receiving threads.
-typedef enum {
-    EID_IDLE = 0,
-    EID_RUNNING,
-    EID_CLOSING,
-    EID_INTERRUPTING
-} SapStateEnum;
-
-// A combination of a BpSAP object and a representation of its status.
-// The status only used during reception for now.
-typedef struct {
-    BpSAP sap;
-    SapStateEnum status;
-    int detained;
-    ReqAttendant* attendant;
-} BpSapState;
 
 /* ============================================================================
  * === Define global variables
@@ -349,86 +333,58 @@ static PyObject *pyion_bp_interrupt(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     // Define variables
-    char *destEid = NULL;
-    char *reportEid = NULL;
+
     Sdr sdr = NULL;
-    const char *data = NULL;
     int data_size;
-    Object bundleSdr;
-    Object bundleZco;
-    Object newBundle;
+    char *data;
+    char *reportEid, *destEid;
     int ok, ttl, classOfService, rrFlags, ackReq;
     unsigned int retxTimer;
     BpCustodySwitch custodySwitch;
     BpAncillaryData *ancillaryData = NULL;
     BpSapState *state = NULL;
 
+
+    int status;
     // Parse input arguments. First one is SAP memory address for this endpoint
     if (!PyArg_ParseTuple(args, "ksziiiiiIs#", (unsigned long *)&state, &destEid, &reportEid, &ttl,
                           &classOfService, (int *)&custodySwitch, &rrFlags, &ackReq, &retxTimer,
                           &data, &data_size))
         return NULL;
 
-    // Initialize variables
-    sdr = bp_get_sdr();
-
-    // Insert data to SDR
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    bundleSdr = sdr_insert(sdr, data, (size_t)data_size);
-    if (!sdr_pyend_xn(sdr)) return NULL;
-
-    // If insert failed, cancel transaction and exit
-    if (!bundleSdr) {
-        pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
-        return NULL;
-    }
+    
 
     // NOTE 1: Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
     // this is a blocking call. Therefore, release the GIL.
     // NOTE 2: Since this is blocking call, you cannot be in an SDR transaction. Otherwise you will
     // have a three-way deadlock.
+     
     Py_BEGIN_ALLOW_THREADS                                
-    bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
-                             classOfService, 0, ZcoOutbound, state->attendant);                                        
+           status = base_bp_send(destEid, reportEid, ttl, classOfService,
+                 custodySwitch, rrFlags, ackReq, retxTimer,
+                 ancillaryData, data_size) ;                        
     Py_END_ALLOW_THREADS
 
-    // Handle error while creating ZCO object
-    if (!bundleZco || bundleZco == (Object)ERROR) {
-        pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
-        return NULL;
-    }
-
-    // Send ZCO object using BP protocol.    
-    // NOTE: bp_send starts SDR transactions internally, so it might block.
-    Py_BEGIN_ALLOW_THREADS                        
-    ok = bp_send(state->sap, destEid, reportEid, ttl, classOfService, custodySwitch,
-                 rrFlags, ackReq, ancillaryData, bundleZco, &newBundle);
-    Py_END_ALLOW_THREADS
-
-    // Handle error in bp_send
-    if (ok <= 0) {
-        pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", ok);
-        return NULL;
-    }
-
-    // If you want custody transfer and have specified a re-transmission timer,
-    // then activate it
-    if (custodySwitch == SourceCustodyRequired && retxTimer > 0) {
-        // Note: The timer starts as soon as bp_memo is called.
-        ok = bp_memo(newBundle, retxTimer);
-
-        // Handle error in bp_memo
-        if (ok < 0) {
-            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", ok);
+    switch(status) {
+        case 0: 
+            // Return True to indicate success
+            Py_RETURN_TRUE;
+            break;
+        case 1: 
+             pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
             return NULL;
-        }
+        case 2:
+          pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
+          return NULL;
+        case 3:
+            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", ok);
+
+        default:
+            pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", ok);
+            return NULL;
+        
     }
 
-    // If you have opened this endpoint in detained mode, you need to release the bundle
-    if (state->detained) bp_release(newBundle);
-
-    // Return True to indicate success
-    Py_RETURN_TRUE;
 }
 
 /* ============================================================================
