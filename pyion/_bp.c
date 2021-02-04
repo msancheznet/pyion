@@ -198,7 +198,10 @@ static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
-    bp_detach();
+    if (base_bp_detach() < 0) {
+        pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
+        return NULL;
+    }
 
     // Return True to indicate success
     Py_RETURN_TRUE;
