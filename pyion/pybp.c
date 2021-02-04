@@ -36,6 +36,11 @@ int base_bp_attach() {
 }
 
 
+int base_bp_detach() {
+    bp_detach();
+    return 0;
+}
+
 
 
 /**
