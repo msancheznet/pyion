@@ -306,7 +306,7 @@ class BpProxy(utils.Proxy):
         """
         # If object passed is not endpoint, fail
         if not isinstance(ept, bp.Endpoint):
-            raise ValueError('Expected an Enpoint instance')
+            raise ValueError('Expected an Enpoint instance, '+ str(type(ept)))
 
         # Interrupt this endpoint first. 
         try:
