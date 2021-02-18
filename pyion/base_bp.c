@@ -9,31 +9,12 @@
 #include <string.h>
 #include <bp.h>
 #include "return_codes.h"
+#include "base_bp.h"
 
 
-#define MAX_PREALLOC_BUFFER 1024
 
-// Possible states of an enpoint. This is used to avoid race conditions
-// when closing receiving threads.
-typedef enum
-{
-    EID_IDLE = 0,
-    EID_RUNNING,
-    EID_CLOSING,
-    EID_INTERRUPTING
-} SapStateEnum;
 
-// A combination of a BpSAP object and a representation of its status.
-// The status only used during reception for now.
-typedef struct
-{
-    BpSAP sap;
-    SapStateEnum status;
-    int detained;
-    ReqAttendant *attendant;
-} BpSapState;
-
-int base_bp_attach() {
+ int base_bp_attach() {
     int result = bp_attach();
 
     return result;
@@ -46,7 +27,7 @@ int base_bp_detach() {
 }
 
 
-static void base_close_endpoint(BpSapState *state) {
+void base_close_endpoint(BpSapState *state) {
     // Close and free attendant
     if (state->attendant) {
         ionStopAttendant(state->attendant);
@@ -60,7 +41,7 @@ static void base_close_endpoint(BpSapState *state) {
     free(state);
 }
 
-static int base_bp_interrupt(BpSapState *state) {
+int base_bp_interrupt(BpSapState *state) {
     bp_interrupt(state->sap);
      // Pause the attendant
     if (state->attendant) ionPauseAttendant(state->attendant);
@@ -68,7 +49,7 @@ static int base_bp_interrupt(BpSapState *state) {
 }
 
 
-static int help_receive_data(BpSapState *state, BpDelivery *dlv){
+int help_receive_data(BpSapState *state, BpDelivery *dlv, RecievedBundle *msg){
     // Define variables
     int data_size, len, rx_ret, do_malloc;
     Sdr sdr;
@@ -79,6 +60,8 @@ static int help_receive_data(BpSapState *state, BpDelivery *dlv){
     // call malloc to allocate as much memory as you need.
     char prealloc_payload[MAX_PREALLOC_BUFFER];
     char *payload;
+
+   
 
     // Get ION's SDR
     sdr = bp_get_sdr();
@@ -150,6 +133,10 @@ static int help_receive_data(BpSapState *state, BpDelivery *dlv){
     if (!sdr_pybegin_xn(sdr)) return NULL;
     len = zco_receive_source(sdr, &reader, data_size, payload);
 
+    msg->payload = payload;
+    msg->len = len;
+    msg->do_malloc = do_malloc;
+
     // Handle error while getting the payload
     if (sdr_end_xn(sdr) < 0 || len < 0) {
         //pyion_SetExc(PyExc_IOError, "Error extracting payload from bundle.");
@@ -160,20 +147,15 @@ static int help_receive_data(BpSapState *state, BpDelivery *dlv){
         //return NULL;
     }
 
-    // Build return object
-    PyObject *ret = Py_BuildValue("y#", payload, len);
 
-    // If you allocated memory for this payload, free it here
-    if (do_malloc) free(payload);
-
-    return ret;
+    return 0;
 }
 
 
-static int base_bp_receive_data(BpSapState *state) {
+int base_bp_receive_data(BpSapState *state, RecievedBundle *msg) {
     BpDelivery dlv;
 
-    int status = help_receive_data(state, &dlv);
+    int status = help_receive_data(state, &dlv, msg);
 
     // Close if necessary. Otherwise set to IDLE
     if (state->status == EID_CLOSING) {
@@ -182,9 +164,7 @@ static int base_bp_receive_data(BpSapState *state) {
         state->status = EID_IDLE;
     }
 
-
-
-
+    return status;
 }
 
 
