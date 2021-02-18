@@ -128,7 +128,8 @@ else:
 
 # Defined C compilation options for the extensions.
 compile_args = [
-    '-g'
+    '-g',
+    '--no-undefined',
     '-DSPACE_ORDER={}'.format(ds), 
     '-fPIC', 
     '-Wno-unused-function', 
