@@ -51,7 +51,7 @@
 #include <Python.h>
 
 #include "_utils.c"
-#include "pybp.c"
+#include "base_bp.h"
 
 /* ============================================================================
  * === _bp module definitions
@@ -355,10 +355,10 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
           pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
           return NULL;
         case 3:
-            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", ok);
+            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", 3);
 
         default:
-            pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", ok);
+            pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", status);
             return NULL;
         
     }
@@ -370,11 +370,13 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
  * ============================================================================ */
 
 
-
 static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     // Define variables
     BpSapState *state;
     PyObject *ret;
+
+    int status;
+    RecievedBundle msg = {NULL, 0};
  
 
     // Parse the input tuple. Raises error automatically if not possible
@@ -385,8 +387,16 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     state->status = EID_RUNNING;
 
     Py_BEGIN_ALLOW_THREADS                                // Release the GIL
-    ret = base_bp_receive_data(state);
+    status = base_bp_receive_data(state, &msg);
     Py_END_ALLOW_THREADS
+
+    printf("%d",status);
+
+    // Build return object
+    ret = Py_BuildValue("y#", msg.payload, msg.len);
+
+    // If you allocated memory for this payload, free it here
+    if (msg.do_malloc) free(msg.payload);
 
     // Return value
     return ret;
