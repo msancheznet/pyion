@@ -187,7 +187,11 @@ PyMODINIT_FUNC PyInit__bp(void) {
 
 static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
     // Try to attach to BP agent
-    if (base_bp_attach() < 0) {
+    int oK;
+Py_BEGIN_ALLOW_THREADS                                
+ oK =base_bp_attach()
+ Py_BEGIN_ALLOW_THREADS   
+    if (oK < 0) {
         pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
         return NULL;
     }
