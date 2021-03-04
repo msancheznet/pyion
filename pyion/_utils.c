@@ -173,12 +173,13 @@ static int sdr_pybegin_xn(Sdr sdr) {
     int ok = 0;
 
     // sdr_begin_xn can block. Therefore, release the GIL
-    Py_BEGIN_ALLOW_THREADS
+    //Py_BEGIN_ALLOW_THREADS
     ok = sdr_begin_xn(sdr);
-    Py_END_ALLOW_THREADS
+    //Py_END_ALLOW_THREADS
 
     // If failure to start transaction, set Exception
-    if (!ok) pyion_SetExc(PyExc_RuntimeError, "[sdr_pybegin_xn] Cannot start SDR transaction.");
+    if (!ok) return PYION_SDR_ERR; 
+    
 
     // Return True if success
     return ok;
