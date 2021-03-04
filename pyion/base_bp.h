@@ -36,7 +36,9 @@ typedef struct
     char *payload;
     int len;
     int do_malloc;
-} RecievedBundle;
+} RxPayload;
+
+
 
 int base_bp_attach();
 
@@ -46,8 +48,10 @@ void base_close_endpoint(BpSapState *state);
 
 int base_bp_interrupt(BpSapState *state);
 
-int base_bp_receive_data(BpSapState *state, RecievedBundle *msg);
+int base_bp_receive_data(BpSapState *state, RxPayload *msg);
 
+
+//TODO: Utilize some struct
 int base_bp_send(char *destEid, char *reportEid, int ttl, int classOfService,
                  int custodySwitch, int rrFlags, int ackReq, unsigned int retxTimer,
                  BpAncillaryData *ancillaryData, int data_size);

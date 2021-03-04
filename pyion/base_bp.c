@@ -49,7 +49,7 @@ int base_bp_interrupt(BpSapState *state) {
 }
 
 
-int help_receive_data(BpSapState *state, BpDelivery *dlv, RecievedBundle *msg){
+int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
     // Define variables
     int data_size, len, rx_ret, do_malloc;
     Sdr sdr;
@@ -152,7 +152,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RecievedBundle *msg){
 }
 
 
-int base_bp_receive_data(BpSapState *state, RecievedBundle *msg) {
+int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
     BpDelivery dlv;
 
     int status = help_receive_data(state, &dlv, msg);
@@ -243,6 +243,7 @@ int base_bp_send(char *destEid, char *reportEid, int ttl, int classOfService,
         return 1;
 
     // If insert failed, cancel transaction and exit
+    //sdr_end_xn(sdr);
 
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
                              classOfService, 0, ZcoOutbound, state->attendant);

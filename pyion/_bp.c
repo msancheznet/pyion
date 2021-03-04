@@ -188,9 +188,9 @@ PyMODINIT_FUNC PyInit__bp(void) {
 static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
     // Try to attach to BP agent
     int oK;
-Py_BEGIN_ALLOW_THREADS                                
- oK =base_bp_attach()
- Py_BEGIN_ALLOW_THREADS   
+Py_BEGIN_ALLOW_THREADS;                                
+ oK =base_bp_attach();
+ Py_END_ALLOW_THREADS   
     if (oK < 0) {
         pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
         return NULL;
@@ -202,7 +202,12 @@ Py_BEGIN_ALLOW_THREADS
 
 static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
-    if (base_bp_detach() < 0) {
+    //Consider GIL situation
+    int oK;
+    Py_BEGIN_ALLOW_THREADS                                
+    oK = base_bp_detach();
+    Py_END_ALLOW_THREADS
+    if (oK < 0) {
         pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
         return NULL;
     }
@@ -380,7 +385,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     PyObject *ret;
 
     int status;
-    RecievedBundle msg = {NULL, 0};
+    RxPayload msg = {NULL, 0, 0};
  
 
     // Parse the input tuple. Raises error automatically if not possible
