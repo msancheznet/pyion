@@ -2,3 +2,7 @@ build
 dist
 .vscode
 pyion.egg-info
+
+*.so
+
+*.pyc
