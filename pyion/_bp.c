@@ -183,7 +183,7 @@ PyMODINIT_FUNC PyInit__bp(void) {
 
 /* ============================================================================
  * === Attach/Detach Functions
- * ============================================================================ */
+ * =================================s=========================================== */
 
 static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
     // Try to attach to BP agent
@@ -223,7 +223,7 @@ static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
 static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
 
     //state object, we will be returning a form of this
-    BpSapState state;
+    BpSapState *state = NULL;
     int ok;
     char *ownEid;
     int detained, mem_ctrl;
@@ -347,7 +347,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     // Release the GIL
      
     Py_BEGIN_ALLOW_THREADS                                
-           status = base_bp_send(destEid, reportEid, ttl, classOfService,
+           status = base_bp_send(state, destEid, reportEid, ttl, classOfService,
                  custodySwitch, rrFlags, ackReq, retxTimer,
                  ancillaryData, data_size) ;                        
     Py_END_ALLOW_THREADS
