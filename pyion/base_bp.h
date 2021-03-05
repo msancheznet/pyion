@@ -52,10 +52,10 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg);
 
 
 //TODO: Utilize some struct
-int base_bp_send(char *destEid, char *reportEid, int ttl, int classOfService,
+int base_bp_send(BpSapState *state, char *destEid, char *reportEid, int ttl, int classOfService,
                  int custodySwitch, int rrFlags, int ackReq, unsigned int retxTimer,
                  BpAncillaryData *ancillaryData, int data_size);
 
-int base_bp_open(BpSapState *state, int mem_ctrl);
+int base_bp_open(BpSapState **state, int mem_ctrl);
 
 #endif
