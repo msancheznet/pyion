@@ -16,6 +16,7 @@
 #include <Python.h>
 
 #include "_utils.c"
+#include "base_ltp.h"
 
 /* ============================================================================
  * === _ltp module definitions
@@ -101,18 +102,6 @@ PyMODINIT_FUNC PyInit__ltp(void) {
  * === Define structures for this module
  * ============================================================================ */
 
-// Possible states of an LTP service access point
-typedef enum {
-    SAP_IDLE = 0,
-    SAP_RUNNING,
-    SAP_CLOSING
-} LtpStateEnum;
-
-// State of the LTP service access point
-typedef struct {
-    unsigned int clientId;      // 1=BP, 2=SDA, 3=CFDP, other numbers available
-    LtpStateEnum status;
-} LtpSAP;
 
 /* ============================================================================
  * === Attach/Detach Functions
@@ -123,7 +112,7 @@ static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args) {
     char err_msg[150];
 
     // Try to attach to BP agent
-    if (ltp_attach() < 0) {
+    if (base_ltp_attach() < 0) {
         sprintf(err_msg, "Cannot attach to LTP engine. Is ION running on this host?");
         PyErr_SetString(PyExc_SystemError, err_msg);
         return NULL;
@@ -134,7 +123,7 @@ static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_ltp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
-    ltp_detach();
+    base_ltp_detach();
 
     Py_RETURN_NONE;
 }
@@ -148,44 +137,39 @@ static PyObject *pyion_ltp_open(PyObject *self, PyObject *args) {
     unsigned int clientId;
     char err_msg[150];
 
-    // Allocate memory for state and initialize to zeros
-    LtpSAP *state = (LtpSAP*)malloc(sizeof(LtpSAP));
-    if (state == NULL) {
-        sprintf(err_msg, "Cannot malloc for LTP state.");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
+    LtpSAP *state = NULL;
 
-    // Set memory contents to zeros
-    memset((char *)state, 0, sizeof(LtpSAP));
+    
 
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "I", &clientId))
         return NULL;
 
     // Open connection to LTP client
-    if (ltp_open(clientId) < 0) {
-        sprintf(err_msg, "Cannot open LTP client access point.");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
+
+    int open_status = base_ltp_open(clientId, state);
+
+    if (open_status < 0) {
+        switch (open_status) {
+            case PYION_MALLOC_ERR:
+                sprintf(err_msg, "Failed to malloc for LtpSapState");
+                PyErr_SetString(PyExc_MemoryError, err_msg);
+                return NULL;
+            default:
+                sprintf(err_msg, "Cannot open LTP client access point.");
+                PyErr_SetString(PyExc_RuntimeError, err_msg);
+                 return NULL;
+        }
     }
 
-    // Fill state information
-    state->clientId = clientId;
-    state->status = SAP_IDLE;
+   
 
     // Return the memory address of the LTP state as an unsined long
     PyObject *ret = Py_BuildValue("k", state);
     return ret;
 }
 
-static void close_access_point(LtpSAP *state) {
-    // Close this SAP
-    ltp_close(state->clientId);
 
-    // Free state memory
-    free(state);
-}
 
 static PyObject *pyion_ltp_close(PyObject *self, PyObject *args) {
     // Define variables
@@ -197,7 +181,7 @@ static PyObject *pyion_ltp_close(PyObject *self, PyObject *args) {
 
     // If endpoint is in idle state, just close
     if (state->status == SAP_IDLE) {
-        close_access_point(state);
+        base_ltp_close(state);
         Py_RETURN_NONE;
     }
 
@@ -457,7 +441,7 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
 
     // Close if necessary. Otherwise set to IDLE
     if (state->status == SAP_CLOSING) {
-        close_access_point(state);
+       base_ltp_close(state);
     } else {
         state->status = SAP_IDLE;
     }
