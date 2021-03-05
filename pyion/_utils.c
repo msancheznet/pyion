@@ -18,6 +18,7 @@
 #include <psm.h>
 
 #include <Python.h>
+#include "return_codes.h"
 
 /* ============================================================================
  * === Exception Handling and Debugging
