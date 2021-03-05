@@ -9,14 +9,18 @@
 #include <string.h>
 #include <bp.h>
 #include "return_codes.h"
+#include "_utils.c"
 #include "base_bp.h"
 
 
 
 
- int base_bp_attach() {
-    int result = bp_attach();
 
+ int base_bp_attach() {
+    
+
+    
+    int result = bp_attach();
     return result;
 }
 
@@ -168,11 +172,15 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
 }
 
 
-int base_bp_open(BpSapState *state, int mem_ctrl) {
+int base_bp_open(BpSapState **state_ref, int mem_ctrl) {
         // Define variables
     char *ownEid;
     int detained, ok;
-    //state = (BpSapState*)malloc(sizeof(BpSapState));
+    //malloc space for bp sap state
+    *state_ref = (BpSapState*)malloc(sizeof(BpSapState));
+
+    BpSapState *state = *state_ref;
+
     if (state == NULL) {
         return -1;
     }
@@ -218,13 +226,12 @@ int base_bp_open(BpSapState *state, int mem_ctrl) {
 /*destEid, reportEid, ttl, classOfService, 
            custodySwitch, rrFlags, ackReq, ancillaryData, 
            bundleZco, &newBundle*/
-int base_bp_send(char *destEid, char *reportEid, int ttl, int classOfService,
+int base_bp_send(BpSapState *state, char *destEid, char *reportEid, int ttl, int classOfService,
                  int custodySwitch, int rrFlags, int ackReq, unsigned int retxTimer,
                  BpAncillaryData *ancillaryData, int data_size)
 {
 
     Object newBundle;
-    BpSapState *state = NULL;
     const char *data = NULL;
     Sdr sdr = NULL;
     Object bundleZco;
