@@ -71,7 +71,6 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
     sdr = bp_get_sdr();
 
     while (state->status == EID_RUNNING) {
-        // Receive the next bundle. This is a blocking call. Therefore, release the GIL
         rx_ret = bp_receive(state->sap, dlv, BP_BLOCKING);
                                     // Acquire the GIL
 
@@ -172,10 +171,10 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
 }
 
 
-int base_bp_open(BpSapState **state_ref, int mem_ctrl) {
+int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctrl) {
         // Define variables
-    char *ownEid;
-    int detained, ok;
+  
+    int  ok;
     //malloc space for bp sap state
     *state_ref = (BpSapState*)malloc(sizeof(BpSapState));
 
@@ -226,17 +225,15 @@ int base_bp_open(BpSapState **state_ref, int mem_ctrl) {
 /*destEid, reportEid, ttl, classOfService, 
            custodySwitch, rrFlags, ackReq, ancillaryData, 
            bundleZco, &newBundle*/
-int base_bp_send(BpSapState *state, char *destEid, char *reportEid, int ttl, int classOfService,
-                 int custodySwitch, int rrFlags, int ackReq, unsigned int retxTimer,
-                 BpAncillaryData *ancillaryData, int data_size)
+int base_bp_send(BpSapState *state, TxPayload *txInfo)
 {
 
     Object newBundle;
-    const char *data = NULL;
     Sdr sdr = NULL;
     Object bundleZco;
     Object bundleSdr;
     int ok;
+   
 
     // Initialize variables
     sdr = bp_get_sdr();
@@ -245,27 +242,28 @@ int base_bp_send(BpSapState *state, char *destEid, char *reportEid, int ttl, int
     // Insert data to SDR
     if (!sdr_pybegin_xn(sdr))
         return 1;
-    bundleSdr = sdr_insert(sdr, data, (size_t)data_size);
+    bundleSdr = sdr_insert(sdr, txInfo->data, (size_t)txInfo->data_size);
     if (!sdr_pyend_xn(sdr))
         return 1;
 
     // If insert failed, cancel transaction and exit
     //sdr_end_xn(sdr);
 
-    bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
-                             classOfService, 0, ZcoOutbound, state->attendant);
+    bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, txInfo->data_size,
+                             txInfo->classOfService, 0, ZcoOutbound, state->attendant);
     if (bundleZco == 0) {
         return 2;
     }
-    ok = bp_send(state->sap, destEid, reportEid, ttl, classOfService, custodySwitch,
-                 rrFlags, ackReq, ancillaryData, bundleZco, &newBundle);
+    ok = bp_send(state->sap, txInfo->destEid, txInfo->reportEid, txInfo->ttl, 
+                txInfo->classOfService, txInfo->custodySwitch, txInfo->rrFlags, 
+                txInfo->ackReq, txInfo->ancillaryData, bundleZco, &newBundle);
 
     // If you want custody transfer and have specified a re-transmission timer,
     // then activate it
-    if (custodySwitch == SourceCustodyRequired && retxTimer > 0)
+    if (txInfo->custodySwitch == SourceCustodyRequired && txInfo->retxTimer > 0)
     {
         // Note: The timer starts as soon as bp_memo is called.
-        ok = bp_memo(newBundle, retxTimer);
+        ok = bp_memo(newBundle, txInfo->retxTimer);
 
         // Handle error in bp_memo
         if (ok < 0)
