@@ -234,7 +234,7 @@ static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
     
   
 
-    ok = base_bp_open(&state, mem_ctrl);
+    ok = base_bp_open(&state, ownEid, detained, mem_ctrl);
     // Allocate memory for state and initialize to zeros
     if (ok == -1) {
         pyion_SetExc(PyExc_RuntimeError, "Cannot malloc for BP state.");
@@ -331,6 +331,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     BpCustodySwitch custodySwitch;
     BpAncillaryData *ancillaryData = NULL;
     BpSapState *state = NULL;
+    TxPayload txInfo;
 
 
     int status; //return status of bp_send
@@ -342,14 +343,25 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
                           &data, &data_size))
         return NULL;
 
+    txInfo.destEid = destEid;
+    txInfo.reportEid = reportEid;
+    txInfo.ttl = ttl;
+    txInfo.classOfService = classOfService;
+    txInfo.custodySwitch = custodySwitch;
+    txInfo.rrFlags = rrFlags;
+    txInfo.ackReq = ackReq;
+    txInfo.retxTimer = retxTimer;
+    txInfo.data = data;
+    txInfo.data_size = data_size;
+
+    txInfo.ancillaryData = ancillaryData;
+
     
 
     // Release the GIL
      
     Py_BEGIN_ALLOW_THREADS                                
-           status = base_bp_send(state, destEid, reportEid, ttl, classOfService,
-                 custodySwitch, rrFlags, ackReq, retxTimer,
-                 ancillaryData, data_size) ;                        
+           status = base_bp_send(state, &txInfo);                        
     Py_END_ALLOW_THREADS
 
     switch(status) {
