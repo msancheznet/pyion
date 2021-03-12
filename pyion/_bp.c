@@ -398,6 +398,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
 
     int status;
     RxPayload msg = {NULL, 0, 0};
+    msg.payload = msg.payload_prealloc;
  
 
     // Parse the input tuple. Raises error automatically if not possible

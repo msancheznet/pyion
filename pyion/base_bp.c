@@ -9,8 +9,8 @@
 #include <string.h>
 #include <bp.h>
 #include "return_codes.h"
-#include "_utils.c"
 #include "base_bp.h"
+#include "_utils.c"
 
 
 
@@ -62,7 +62,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
     // Define variables to store the bundle payload. If payload size is less than
     // MAX_PREALLOC_BUFFER, then use preallocated buffer to save time. Otherwise,
     // call malloc to allocate as much memory as you need.
-    char prealloc_payload[MAX_PREALLOC_BUFFER];
+   
     char *payload;
 
    
@@ -119,7 +119,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
     }
 
     // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return NULL;
+    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
     data_size = zco_source_data_length(sdr, dlv->adu);
     sdr_pyexit_xn(sdr);
 
@@ -127,13 +127,13 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
     do_malloc = (data_size > MAX_PREALLOC_BUFFER);
 
     // Allocate memory if necessary
-    payload = do_malloc ? (char *)malloc(data_size) : prealloc_payload;
+    payload = do_malloc ? (char *)malloc(data_size) : msg->payload_prealloc;
 
     // Initialize reader
     zco_start_receiving(dlv->adu, &reader);
 
     // Get bundle data
-    if (!sdr_pybegin_xn(sdr)) return NULL;
+    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
     len = zco_receive_source(sdr, &reader, data_size, payload);
 
     msg->payload = payload;
@@ -159,6 +159,7 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
     BpDelivery dlv;
 
     int status = help_receive_data(state, &dlv, msg);
+    bp_release_delivery(&dlv,1);
 
     // Close if necessary. Otherwise set to IDLE
     if (state->status == EID_CLOSING) {
@@ -173,8 +174,8 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
 
 int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctrl) {
         // Define variables
-  
-    int  ok;
+    int ok;
+    
     //malloc space for bp sap state
     *state_ref = (BpSapState*)malloc(sizeof(BpSapState));
 
@@ -210,6 +211,7 @@ int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctr
         state->attendant = NULL;
     }
 
+return 0;
 
 
 }
