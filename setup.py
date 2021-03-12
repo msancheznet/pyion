@@ -179,6 +179,7 @@ _ltp = Extension('_ltp',
                 libraries=['ltp', 'ici','bp','cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',
+                './pyion/_utils.c',
                 './pyion/base_ltp.c'],
                 extra_compile_args=compile_args
                 )

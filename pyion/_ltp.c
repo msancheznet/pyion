@@ -210,8 +210,7 @@ static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args) {
         Py_RETURN_NONE;
 
     // Mark that you have transitioned to interruping state
-    state->status = SAP_CLOSING;
-    ltp_interrupt(state->clientId);
+    base_ltp_interrupt(state);
 
     Py_RETURN_NONE;
 }
@@ -224,53 +223,22 @@ static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
     // Define variables
     char                err_msg[150];
     LtpSAP              *state;
-    LtpSessionId        sessionId;
-    unsigned long long  destEngineId;
-    Sdr                 sdr;
-    Object              extent;
-    Object			    item = 0;
-    char                *data;
-    int                 data_size, ok;
+    int ok;
+    LtpTxPayload        txInfo;
 
     // Parse input arguments. First one is SAP memory address for this endpoint
-    if (!PyArg_ParseTuple(args, "kKs#", (unsigned long *)&state, &destEngineId, &data, &data_size))
+    if (!PyArg_ParseTuple(args, "kKs#", (unsigned long *)&state, &(txInfo.destEngineId),
+     &(txInfo.data), &(txInfo.data_size)))
         return NULL;
 
-    // Get ION SDR
-    sdr = getIonsdr();
-
-    // Start SDR transaction
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-
-    // Allocate SDR memory
-    extent = sdr_insert(sdr, data, (size_t)data_size);
-    if (!extent) {
-        sdr_cancel_xn(sdr);
-        sprintf(err_msg, "SDR memory could not be allocated");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
-
-    // End SDR transaction
-    if (!sdr_pyend_xn(sdr)) return NULL;
-
-    // Create ZCO object (not blocking because there is no attendant)
-    item = ionCreateZco(ZcoSdrSource, extent, 0, data_size,
-                        0, 0, ZcoOutbound, NULL); 
-
-    // Handler error while creating ZCO object
-    if (!item || item == (Object)ERROR) {
-        sprintf(err_msg, "ZCO object creation failed");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
+   
 
     // Send using LTP protocol. All data is sent as RED LTP by definition.
     // NOTE 1: SessionId is filled by ``ltp_send``, but you do not care about it
     // NOTE 2: In general, ltp_send does not block. However, if you exceed the max
     //         number of export sessions defined in ltprc, then it will.
     Py_BEGIN_ALLOW_THREADS
-    ok = ltp_send((uvast)destEngineId, state->clientId, item, LTP_ALL_RED, &sessionId);
+    ok = base_ltp_send(state, &txInfo);
     Py_END_ALLOW_THREADS
 
     // Handle error in ltp_send

@@ -16,6 +16,26 @@ typedef struct {
 } LtpSAP;
 
 
+typedef struct
+{
+    char *payload;
+    int len;
+    int do_malloc;
+} LtpRxPayload;
+
+
+
+
+typedef struct
+{
+    unsigned long long destEngineId;
+    char *data;
+    int data_size;
+    LtpSessionId   sessionId;
+
+} LtpTxPayload;
+
+
 
 /*
 Attaches to ltp endpoint.
@@ -27,6 +47,10 @@ int base_ltp_detach(void);
 int base_ltp_open(unsigned int clientId, LtpSAP *state);
 
 int base_ltp_close(LtpSAP *state);
+
+int base_ltp_interrupt(LtpSAP *state);
+
+int base_ltp_send(LtpSAP *state, LtpTxPayload *txInfo);
 
 
 #endif
