@@ -33,9 +33,10 @@ typedef struct
 
 typedef struct
 {
-    char *payload;
     int len;
     int do_malloc;
+    char *payload;
+    char payload_prealloc[MAX_PREALLOC_BUFFER];
 } RxPayload;
 
 
