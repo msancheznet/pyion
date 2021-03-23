@@ -22,6 +22,9 @@
 # Copyright (c) 2019, Jet Propulsion Laboratory
 # =====================================================================
 
+# Clean up everything
+./cleanup
+
 # Define node list directory
 export ION_NODE_LIST_DIR="$PWD/nodes"
 
@@ -51,6 +54,9 @@ function startNode() {
     # ======================================================================================
     # === DEFINE ENDPOINTS USED BY UTILITY SERVICES
     # ======================================================================================
+	
+	# Pause
+	sleep 1
 
     # Attach the utility to respond to a ping at endpoint ipn:x.100
     bpecho ipn:"$1".100 &

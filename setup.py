@@ -63,7 +63,7 @@ import sys
 from warnings import warn
 
 __version__ = 'pyion-3.7.0'
-__release__ = 'R2019d'
+__release__ = 'R2020a'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -87,7 +87,6 @@ ion_path = os.environ.get('ION_HOME')
 if not ion_path:
     raise ValueError(("Environment variable ION_HOME must indicate the location of ION's ",
                       "source code directory"))
-                       
 
 # Set paths for ION's public API
 if lib_path is None:
@@ -104,26 +103,12 @@ else:
     ion_lib = lib_path                      # ION shared libraries (.so)
 
 # Set paths for compiling _admin
-ion_path  = Path(ion_path)
-bp_path   = ion_path/'bp'/'library'
-cfdp_path = ion_path/'cfdp'/'library'
-ltp_path  = ion_path/'ltp'/'library'
-
-# Set paths for ION's private API
-#if ion_path:
-#    warn('Compiling ``admin`` module into pyion.') 
-
-    # Set paths for compiling _admin
-    #ion_path  = Path(ion_path)
-    #bp_path   = ion_path/'bp'/'library'
-    #cfdp_path = ion_path/'cfdp'/'library'
-    #ltp_path  = ion_path/'ltp'/'library'
-#else:
-    #warn('Module ``admin`` not compiled. Set the environment variable ``ION_HOME``.', 
-    #     category=SetupWarning)
-    
-    # Just empty paths, they won't be used
-    #bp_path, cfdp_path, ltp_path = '', '', ''
+ion_path = Path(ion_path)
+bp_lib   = ion_path/'bp'/'library'
+cfdp_lib = ion_path/'cfdp'/'library'
+ltp_lib  = ion_path/'ltp'/'library'
+cfdp_inc = ion_path/'cfdp'/'include'
+ici_inc  = ion_path/'ici'/'include'
 
 # ========================================================================================
 # === Figure out compile-time options
@@ -156,7 +141,7 @@ compile_args = [
 
 # Define ION administrative extension
 _admin = Extension('_admin',
-                include_dirs=[str(ion_inc), str(bp_path), str(ltp_path), str(cfdp_path)],
+                include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib), str(cfdp_lib), str(ici_inc)],
                 libraries=['ici', 'bp', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_admin.c'],
@@ -165,27 +150,29 @@ _admin = Extension('_admin',
 
 # Define the ION-BP extension and related directories
 _bp = Extension('_bp',
-                include_dirs=[str(ion_inc)],
-                libraries=['bp', 'ici'],
-                library_dirs=[str(ion_lib)],
-                sources=['./pyion/_bp.c'],
+                include_dirs=[str(ion_inc), str(bp_lib)],
+                libraries=['bp', 'ici','ltp', 'cfdp'],
+                library_dirs=[str(ion_lib), str(bp_lib)],
+                sources=['./pyion/_bp.c',
+                         './pyion/_utils.c',
+                         './pyion/base_bp.c'],
                 extra_compile_args=compile_args
                 )
 
 # Define the ION-CFDP extension and related directories
 _cfdp = Extension('_cfdp',
-                include_dirs=[str(ion_inc), str(cfdp_path)],    # NEED TO IMPORT PRIVATE API? THIS IS BUG
+                include_dirs=[str(ion_inc), str(cfdp_inc), str(cfdp_lib)],    
                 libraries=['cfdp', 'ici'],
-                library_dirs=[str(ion_lib)],
+                library_dirs=[str(ion_lib), str(cfdp_lib)],
                 sources=['./pyion/_cfdp.c'],
                 extra_compile_args=compile_args
                 )
 
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc)],
+                include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib)],
                 libraries=['ltp', 'ici'],
-                library_dirs=[str(ion_lib)],
+                library_dirs=[str(ion_lib), str(bp_lib), str(ltp_lib)],
                 sources=['./pyion/_ltp.c'],
                 extra_compile_args=compile_args
                 )

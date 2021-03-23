@@ -129,7 +129,7 @@ class Endpoint():
 
 		# Open another thread because otherwise you cannot handle a SIGINT if blocked
 		# waiting for ZCO space
-		th = Thread(target=self._bp_send, args=args, daemon=True)
+		th = Thread(target=self._bp_send, args=args)
 		th.start()
 
 		# Wait for a bundle to be sent
@@ -285,7 +285,7 @@ class Endpoint():
 			raise ValueError('bp_receive cannot have chunk_size and timeout at the same time.')
 
 		# Open another thread because otherwise you cannot handle a SIGINT
-		th = Thread(target=self._bp_receive, args=(chunk_size,), daemon=True)
+		th = Thread(target=self._bp_receive, args=(chunk_size,))
 		th.start()
 
 		# Wait for a bundle to be delivered	and set a timeout

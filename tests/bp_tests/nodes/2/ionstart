@@ -9,9 +9,9 @@ ionadmin	../two_node_contact_plan.ionrc &
 ionsecadmin	node.ionsecrc &
 bpadmin		node.bprc &
 
-"$ION_HOME/system_up" -i "p 30" -b "p 30"
-if [ $? -ne 2 ]
-then
-   exit 1
-fi
+#"$ION_HOME/system_up" -i "p 30" -b "p 30"
+#if [ $? -ne 2 ]
+#then
+#   exit 1
+#fi
 # ====================================================================================================== EOF ======================================================================================================
