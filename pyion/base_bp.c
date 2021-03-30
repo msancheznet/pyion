@@ -135,8 +135,7 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
 
     // If you want custody transfer and have specified a re-transmission timer,
     // then activate it
-    if (txInfo->custodySwitch == SourceCustodyRequired && txInfo->retxTimer > 0)
-    {
+    if (txInfo->custodySwitch == SourceCustodyRequired && txInfo->retxTimer > 0) {
         // Note: The timer starts as soon as bp_memo is called.
         ok = bp_memo(newBundle, txInfo->retxTimer);
 

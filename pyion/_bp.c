@@ -295,21 +295,25 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
                           &data, &data_size))
         return NULL;
 
+    // Length of memory to copy
+    size_t len_destEid = strlen(destEid)+1;
+    size_t len_rptEid = (!reportEid) ? 0 : strlen(reportEid)+1;
+
     // Initialize TxPayload struct
-    txInfo.destEid = malloc(sizeof(char)*(strlen(destEid)+1));   
-    txInfo.reportEid = (reportEid == NULL) ? NULL : malloc(sizeof(char)*(strlen(reportEid)+1));
+    txInfo.destEid = malloc(sizeof(char)*len_destEid);   
+    txInfo.reportEid = (!reportEid) ? NULL : malloc(sizeof(char)*len_rptEid);
     txInfo.data = malloc(sizeof(char)*data_size);
 
     // Create TxPayload struct
-    strcpy(txInfo.destEid, destEid);
-    if (reportEid) strcpy(txInfo.reportEid, reportEid);
+    memcpy(txInfo.destEid, destEid, len_destEid);
+    if (reportEid) memcpy(txInfo.reportEid, reportEid, len_rptEid);
     txInfo.ttl = ttl;
     txInfo.classOfService = classOfService;
     txInfo.custodySwitch = custodySwitch;
     txInfo.rrFlags = rrFlags;
     txInfo.ackReq = ackReq;
     txInfo.retxTimer = retxTimer;
-    strcpy(txInfo.data, data);
+    memcpy(txInfo.data, data, data_size);
     txInfo.data_size = data_size;
     txInfo.ancillaryData = ancillaryData;
 
