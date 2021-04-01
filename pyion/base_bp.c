@@ -63,6 +63,7 @@ int base_create_bp_tx_payload(BpTx **obj) {
     txInfo->data_size = 0;
     txInfo->ancillaryData = NULL;
     *obj = txInfo;
+    return 0;
 }
 
 int base_init_bp_tx_payload(BpTx *txInfo) {

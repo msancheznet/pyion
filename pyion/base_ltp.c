@@ -15,12 +15,10 @@ void base_ltp_detach(void) {
 }
 
 int base_ltp_open(unsigned int clientId, LtpSAP **state) {
-    char err_msg[150];
     // Allocate memory for state and initialize to zeros
     //Replaced memset with calloc for cleaner code
     *state = (LtpSAP*)calloc(1,sizeof(LtpSAP));
     if (*state == NULL) {
-        sprintf(err_msg, "Cannot malloc for LTP state.");
         return PYION_MALLOC_ERR;
     }
 
@@ -90,4 +88,130 @@ int base_ltp_send(LtpSAP *state, LtpTxPayload *msg) {
     //         number of export sessions defined in ltprc, then it will.
     ok = ltp_send((uvast)msg->destEngineId, state->clientId, item, LTP_ALL_RED, &(msg->sessionId));
     return ok;
+}
+
+int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
+    // Define variables
+    char            err_msg[150];
+    ZcoReader	    reader;
+    Sdr             sdr;
+    LtpNoticeType	type;
+	LtpSessionId	sessionId;
+	unsigned char	endOfBlock;
+    unsigned char   reasonCode;
+	unsigned int	dataOffset;
+	unsigned int	dataLength;
+	Object		    data;
+    int             receiving_block, notice, do_malloc;
+    vast            data_size;
+
+    // Create a pre-allocated buffer for small block sizes. Otherwise, use malloc to
+    // get dynamic memory
+    
+
+    // Mark as running
+    receiving_block = 1;
+    state->status = SAP_RUNNING;
+
+    // Process incoming indications
+    while ((state->status == SAP_RUNNING) && (receiving_block == 1)) {
+        // Get the next LTP notice
+        notice = ltp_get_notice(state->clientId, &type, &sessionId, &reasonCode, 
+                                &endOfBlock, &dataOffset, &dataLength, &data);
+
+        // Handle error while receiving notices
+        if (notice < 0) {
+            //Need to set error string receiving notices.
+            return PYION_ERR_LTP_NOTICE;
+        }
+        payloadObj->reasonCode = reasonCode;
+        // Handle different notice types
+        switch (type) {
+            case LtpExportSessionComplete:      // Transmit success
+                // Do not mark reception of block complete here. This should be done by the 
+                // LtpRecvRedPart case.
+                break;
+            case LtpImportSessionCanceled:      // Cancelled sessions. No data has been received yet.
+                // Release any data and throw exception
+                ltp_release_data(data);      
+                return PYION_ERR_LTP_IMPORT;
+            case LtpExportSessionCanceled:      // Transmit failure. Some data might have been received already.
+                // Release any data and throw exception
+                ltp_release_data(data);
+                return PYION_ERR_LTP_EXPORT;
+            case LtpRecvRedPart:
+                // If this is not the end of the block, you are dealing with a block that is
+                // partially green, partially red. This is not allowed.
+                if (!endOfBlock) {
+                    ltp_release_data(data);
+                    return PYION_ERR_LTP_GREEN;
+                }
+                
+                // Mark that reception of block has ended
+                receiving_block = 0;
+                break;
+            case LtpRecvGreenSegment:
+                // Release any data and throw exception
+                ltp_release_data(data);
+                return PYION_ERR_LTP_RED;
+            default:
+                break;
+        }
+
+        // Make sure other tasks have a chance to run
+        sm_TaskYield();
+    }
+
+    // If you exited because of closing, throw error
+    if (state->status == SAP_CLOSING) {
+        return PYION_ERR_LTP_RECEPTION_CLOSED;
+    }
+
+    // If no block received by now and you are not closing, error.
+    if (receiving_block == -1) {
+        return PYION_ERR_LTP_BLOCK_NOT_DELIVERED;
+    }
+
+    // Get ION SDR
+    sdr = getIonsdr();
+
+    // Get content data size
+    if (!sdr_pybegin_xn(sdr)) return NULL;
+    data_size = zco_source_data_length(sdr, data);
+    sdr_exit_xn(sdr);
+
+    // Check if we need to allocate memory dynamically
+    do_malloc = 1;
+
+    // Allocate memory for payload
+    payloadObj->payload =  (char*)malloc(data_size);
+
+    // Prepare to receive next block
+    zco_start_receiving(data, &reader);
+
+    // Get bundle data
+    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    payloadObj->len = zco_receive_source(sdr, &reader, data_size, payloadObj->payload);
+    if (!sdr_pyend_xn(sdr)) return PYION_SDR_ERR;
+
+
+    // Handle error while getting the payload
+    if (payloadObj->len < 0) {
+        
+        if (do_malloc) free(payloadObj->payload);
+        // Clean up tasks
+        
+        return PYION_ERR_LTP_EXTRACT;
+    }
+
+    // Build return object
+   
+
+    // Release LTP object now that you are done with it.
+    ltp_release_data(data);
+
+    // Deallocate memory
+    if (do_malloc) free(payloadObj->payload);
+
+    return 0;
 }
