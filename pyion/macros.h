@@ -20,11 +20,13 @@
 
 // Specific error codes
 #define PYION_SDR_ERR -10001
+#define PYION_PSM_ERR -10007
 #define PYION_IO_ERR -10002
 #define PYION_INTERRUPTED_ERR -10003
 #define PYION_CONN_ABORTED_ERR -10004
 #define PYION_MALLOC_ERR  -10005
 #define PYION_ZCO_ERR -10006
+
 
 /* ============================================================================
  * === SDR MACROS

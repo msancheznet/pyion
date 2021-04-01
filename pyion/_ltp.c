@@ -10,9 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ion.h>
-#include <zco.h>
-#include <ltp.h>
 #include <Python.h>
 
 #include "_utils.c"
