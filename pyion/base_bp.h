@@ -67,10 +67,21 @@ int base_bp_interrupt(BpSapState *state);
 
 int base_bp_receive_data(BpSapState *state, RxPayload *msg);
 
-
 //TODO: Utilize some struct
 int base_bp_send(BpSapState *state, TxPayload *txInfo);
 
 int base_bp_open(BpSapState **state, char *ownEid, int detained, int mem_ctrl);
+
+//Create a payload on the heap
+int base_heap_create_bp_tx_payload(TxPayload **obj);
+
+//Free a payload on the heap
+int base_heap_destroy_bp_tx_payload(TxPayload *obj);
+
+//Initialize already-created payload
+int base_init_bp_tx_payload(TxPayload *obj);
+
+//Free payload members without freeing actual payload object
+int base_stack_destroy_bp_tx_payload(TxPayload *obj);
 
 #endif
