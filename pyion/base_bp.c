@@ -14,9 +14,7 @@
 
 
 
-
-
- int base_bp_attach() {
+int base_bp_attach() {
     
 
     
@@ -52,8 +50,48 @@ int base_bp_interrupt(BpSapState *state) {
     return 0;
 }
 
+int base_create_bp_tx_payload(TxPayload **obj) {
+    TxPayload *txInfo = malloc(sizeof(TxPayload));
+    txInfo->destEid = NULL;
+    txInfo->reportEid = NULL;
+    txInfo->ttl = 0;
+    txInfo->classOfService = 0;
+    txInfo->custodySwitch = 0;
+    txInfo->rrFlags = 0;
+    txInfo->ackReq = 0;
+    txInfo->retxTimer = 0;
+    txInfo->data = NULL;
+    txInfo->data_size = 0;
+    txInfo->ancillaryData = NULL;
+    *obj = txInfo;
+}
+
+int base_init_bp_tx_payload(TxPayload *txInfo) {
+    txInfo->destEid = NULL;
+    txInfo->reportEid = NULL;
+    txInfo->ttl = 0;
+    txInfo->classOfService = 0;
+    txInfo->custodySwitch = 0;
+    txInfo->rrFlags = 0;
+    txInfo->ackReq = 0;
+    txInfo->retxTimer = 0;
+    txInfo->data = NULL;
+    txInfo->data_size = 0;
+    txInfo->ancillaryData = NULL;
+    return 0;
+}
+
+int base_stack_destroy_bp_tx_payload(TxPayload *obj) {
+    return 0;
+}
+
+int base_heap_destroy_bp_tx_payload(TxPayload *obj) {
+   return 0;
+}
+
 
 int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
+
     // Define variables
     int data_size, len, rx_ret, do_malloc;
     Sdr sdr;
@@ -69,16 +107,16 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
 
     // Get ION's SDR
     sdr = bp_get_sdr();
+    CHKZERO(sdr); //asert statement, checking SDR
+    CHKZERO(dlv);
+    CHKZERO(msg);
 
     while (state->status == EID_RUNNING) {
         rx_ret = bp_receive(state->sap, dlv, BP_BLOCKING);
                                     // Acquire the GIL
-
         // Check if error while receiving a bundle
         if ((rx_ret < 0) && (state->status == EID_RUNNING)) {
             return PYION_IO_ERR;
-            //pyion_SetExc(PyExc_IOError, "Error receiving bundle through endpoint (err code=%d).", rx_ret);
-            //return NULL;
         }
 
         // If dlv is not interrupted (e.g., it was successful), get out of loop.
@@ -91,31 +129,22 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
 
     // If you exited because of interruption
     if (state->status == EID_INTERRUPTING) {
-        //pyion_SetExc(PyExc_InterruptedError, "BP reception interrupted.");
         return PYION_INTERRUPTED_ERR;
-        //return NULL;
     }
 
     // If you exited because of closing
     if (state->status == EID_CLOSING) {
         return  PYION_CONN_ABORTED_ERR;
-      //  pyion_SetExc(PyExc_ConnectionAbortedError, "BP reception closed.");
-       // return NULL;
     }
 
     // If endpoint was stopped, finish
     if (dlv->result == BpEndpointStopped) {
         return  PYION_CONN_ABORTED_ERR;
-
-        //pyion_SetExc(PyExc_ConnectionAbortedError, "BP endpoint was stopped.");
-        //return NULL;
     }
 
     // If bundle does not have the payload, raise IOError
     if (dlv->result != BpPayloadPresent) {
         return PYION_IO_ERR;
-        //pyion_SetExc(PyExc_IOError, "Bundle received without payload.");
-        //return NULL;
     }
 
     // Get content data size
@@ -142,15 +171,11 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
 
     // Handle error while getting the payload
     if (sdr_end_xn(sdr) < 0 || len < 0) {
-        //pyion_SetExc(PyExc_IOError, "Error extracting payload from bundle.");
-
         // Clean up tasks
         if (do_malloc) free(payload);
         return PYION_IO_ERR;
         //return NULL;
     }
-
-
     return 0;
 }
 
@@ -239,7 +264,7 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
 
     // Initialize variables
     sdr = bp_get_sdr();
-    printf("THIS IS SOMETHING THAT I ADDED!");
+    //printf("THIS IS SOMETHING THAT I ADDED!");
 
     // Insert data to SDR
     if (!sdr_pybegin_xn(sdr))
