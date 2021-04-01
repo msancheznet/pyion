@@ -203,15 +203,13 @@ Py_BEGIN_ALLOW_THREADS;
 static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
     //Consider GIL situation
-    int oK;
-    Py_BEGIN_ALLOW_THREADS                                
-    oK = base_bp_detach();
+    
+    Py_BEGIN_ALLOW_THREADS           
+     //bp_detach is a void function. If it fails, then something
+     //serious is happening and will kill the process as necessary.                     
+    base_bp_detach();
     Py_END_ALLOW_THREADS
-    if (oK < 0) {
-        pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
-        return NULL;
-    }
-
+    
     // Return True to indicate success
     Py_RETURN_TRUE;
 }
@@ -331,7 +329,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     BpCustodySwitch custodySwitch;
     BpAncillaryData *ancillaryData = NULL;
     BpSapState *state = NULL;
-    TxPayload txInfo;
+    BpTx txInfo;
 
     base_init_bp_tx_payload(&txInfo);
 
@@ -398,7 +396,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     PyObject *ret;
 
     int status;
-    RxPayload msg = {NULL, 0, 0};
+    BpRx msg = {NULL, 0, 0};
     msg.payload = msg.payload_prealloc;
  
 
