@@ -35,7 +35,7 @@ dest_eid = 'ipn:2.1'
 rept_eid = 'ipn:1.2'
 
 # Number of threads
-num_threads = 20
+num_threads = 4
 
 # Define endpoint properties
 ept_props = {

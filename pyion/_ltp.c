@@ -16,6 +16,8 @@
 #include <Python.h>
 
 #include "_utils.c"
+#include "base_ltp.h"
+#include "macros.h"
 
 /* ============================================================================
  * === _ltp module definitions
@@ -92,51 +94,45 @@ PyMODINIT_FUNC PyInit__ltp(void) {
 }
 
 /* ============================================================================
- * === Define global variables
- * ============================================================================ */
-
-#define MAX_LTP_SESSIONS 1024
-
-/* ============================================================================
- * === Define structures for this module
- * ============================================================================ */
-
-// Possible states of an LTP service access point
-typedef enum {
-    SAP_IDLE = 0,
-    SAP_RUNNING,
-    SAP_CLOSING
-} LtpStateEnum;
-
-// State of the LTP service access point
-typedef struct {
-    unsigned int clientId;      // 1=BP, 2=SDA, 3=CFDP, other numbers available
-    LtpStateEnum status;
-} LtpSAP;
-
-/* ============================================================================
  * === Attach/Detach Functions
  * ============================================================================ */
 
 static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args) {
-    // Define variables
-    char err_msg[150];
+    // Initialize variables
+    int ok;
 
-    // Try to attach to BP agent
-    if (ltp_attach() < 0) {
-        sprintf(err_msg, "Cannot attach to LTP engine. Is ION running on this host?");
-        PyErr_SetString(PyExc_SystemError, err_msg);
+    // Release GIL and attach
+    Py_BEGIN_ALLOW_THREADS;                                
+    ok = base_ltp_attach();
+    Py_END_ALLOW_THREADS   
+    
+    // Error handling
+    if (ok < 0) {
+        pyion_SetExc(PyExc_SystemError, "Cannot attach to LTP engine. Is ION running on this host?");
         return NULL;
     }
 
-    Py_RETURN_NONE;
+    // Return True to indicate success
+    Py_RETURN_TRUE;
 }
 
 static PyObject *pyion_ltp_detach(PyObject *self, PyObject *args) {
-    // Detach from BP agent
-    ltp_detach();
+    // Initialize variables
+    int ok;
 
-    Py_RETURN_NONE;
+    // Release GIL and detach
+    Py_BEGIN_ALLOW_THREADS                                
+    ok = base_ltp_detach();
+    Py_END_ALLOW_THREADS
+
+    // Error handling
+    if (ok < 0) {
+        pyion_SetExc(PyExc_SystemError, "Cannot detach from LTP engine.");
+        return NULL;
+    }
+
+    // Return True to indicate success
+    Py_RETURN_TRUE;
 }
 
 /* ============================================================================
@@ -146,65 +142,56 @@ static PyObject *pyion_ltp_detach(PyObject *self, PyObject *args) {
 static PyObject *pyion_ltp_open(PyObject *self, PyObject *args) {
     // Define variables
     unsigned int clientId;
-    char err_msg[150];
-
-    // Allocate memory for state and initialize to zeros
-    LtpSAP *state = (LtpSAP*)malloc(sizeof(LtpSAP));
-    if (state == NULL) {
-        sprintf(err_msg, "Cannot malloc for LTP state.");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
-
-    // Set memory contents to zeros
-    memset((char *)state, 0, sizeof(LtpSAP));
+    int ok;
+    LtpSAP *state;
 
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "I", &clientId))
         return NULL;
 
-    // Open connection to LTP client
-    if (ltp_open(clientId) < 0) {
-        sprintf(err_msg, "Cannot open LTP client access point.");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
+    // Release GIL and open 
+    Py_BEGIN_ALLOW_THREADS                                
+    ok = base_ltp_open(&state, clientId);
+    Py_END_ALLOW_THREADS
+
+    // Handle errors
+    switch(ok) {
+        case -1:
+            pyion_SetExc(PyExc_RuntimeError, "Cannot malloc for LTP state.");
+            break;
+        case -2:
+            pyion_SetExc(PyExc_ConnectionError, "Cannot open LTP client access point.");
+            break;
     }
 
-    // Fill state information
-    state->clientId = clientId;
-    state->status = SAP_IDLE;
+    // If error, return
+    if (ok < PYION_OK) return NULL;
 
-    // Return the memory address of the LTP state as an unsined long
+    // Return the memory address of the SAP for this endpoint as an unsined long
     PyObject *ret = Py_BuildValue("k", state);
+
     return ret;
-}
-
-static void close_access_point(LtpSAP *state) {
-    // Close this SAP
-    ltp_close(state->clientId);
-
-    // Free state memory
-    free(state);
 }
 
 static PyObject *pyion_ltp_close(PyObject *self, PyObject *args) {
     // Define variables
     LtpSAP *state;
+    int ok;
 
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
         return NULL;
 
-    // If endpoint is in idle state, just close
-    if (state->status == SAP_IDLE) {
-        close_access_point(state);
-        Py_RETURN_NONE;
-    }
+    // Release GIL and close
+    Py_BEGIN_ALLOW_THREADS                                
+    ok = base_ltp_close(state);
+    Py_END_ALLOW_THREADS
 
-    // We assume that if you reach this point, you are always in 
-    // running state.
-    state->status = SAP_CLOSING;
-    ltp_interrupt(state->clientId);
+    // Handle errors
+    if (ok < PYION_OK) {
+        pyion_SetExc(PyExc_RuntimeError, "Cannot close LTP access point.");
+        return NULL;
+    }
     
     Py_RETURN_NONE;
 }
@@ -221,13 +208,10 @@ static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
         return NULL;
 
-    // If access point is already closing, you can return
-    if (state->status != SAP_RUNNING)
-        Py_RETURN_NONE;
-
-    // Mark that you have transitioned to interruping state
-    state->status = SAP_CLOSING;
-    ltp_interrupt(state->clientId);
+    // Release GIL and interrupt
+    Py_BEGIN_ALLOW_THREADS                                
+    int ok = base_ltp_interrupt(state);
+    Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
 }
@@ -236,15 +220,12 @@ static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args) {
  * === Send Functionality
  * ============================================================================ */
 
+
 static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
     // Define variables
-    char                err_msg[150];
     LtpSAP              *state;
-    LtpSessionId        sessionId;
     unsigned long long  destEngineId;
-    Sdr                 sdr;
-    Object              extent;
-    Object			    item = 0;
+    LtpSessionId        sessionId;
     char                *data;
     int                 data_size, ok;
 
@@ -252,50 +233,28 @@ static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "kKs#", (unsigned long *)&state, &destEngineId, &data, &data_size))
         return NULL;
 
-    // Get ION SDR
-    sdr = getIonsdr();
-
-    // Start SDR transaction
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-
-    // Allocate SDR memory
-    extent = sdr_insert(sdr, data, (size_t)data_size);
-    if (!extent) {
-        sdr_cancel_xn(sdr);
-        sprintf(err_msg, "SDR memory could not be allocated");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
-
-    // End SDR transaction
-    if (!sdr_pyend_xn(sdr)) return NULL;
-
-    // Create ZCO object (not blocking because there is no attendant)
-    item = ionCreateZco(ZcoSdrSource, extent, 0, data_size,
-                        0, 0, ZcoOutbound, NULL); 
-
-    // Handler error while creating ZCO object
-    if (!item || item == (Object)ERROR) {
-        sprintf(err_msg, "ZCO object creation failed");
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
-    }
-
-    // Send using LTP protocol. All data is sent as RED LTP by definition.
-    // NOTE 1: SessionId is filled by ``ltp_send``, but you do not care about it
-    // NOTE 2: In general, ltp_send does not block. However, if you exceed the max
-    //         number of export sessions defined in ltprc, then it will.
-    Py_BEGIN_ALLOW_THREADS
-    ok = ltp_send((uvast)destEngineId, state->clientId, item, LTP_ALL_RED, &sessionId);
+    // Release GIL and send data
+    Py_BEGIN_ALLOW_THREADS                                
+    ok = base_ltp_send(state, destEngineId, data, data_size);
     Py_END_ALLOW_THREADS
 
-    // Handle error in ltp_send
-    if (ok <= 0) {
-        sprintf(err_msg, "Error while sending the data through LTP (err code=%i)", ok);
-        PyErr_SetString(PyExc_RuntimeError, err_msg);
-        return NULL;
+    // Handle errors
+    switch(ok) {
+        case PYION_SDR_ERR:
+            pyion_SetExc(PyExc_RuntimeError, "SDR memory could not be allocated.");
+            break;
+        case PYION_ZCO_ERR:
+            pyion_SetExc(PyExc_ConnectionError, "Cannot create ZCO object.");
+            break;
+        case PYION_IO_ERR:
+            pyion_SetExc(PyExc_ConnectionError, "Error while sending the data through LTP.");
+            break;
     }
-    
+
+    // If error, return
+    if (ok < PYION_OK) return NULL;
+
+    // If you reach this point, everything is ok
     Py_RETURN_NONE;
 }
 
@@ -303,165 +262,66 @@ static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
  * === Receive Functionality
  * ============================================================================ */
 
-static PyObject *receive_data(LtpSAP *state){
-    // Define variables
-    char            err_msg[150];
-    ZcoReader	    reader;
-    Sdr             sdr;
-    LtpNoticeType	type;
-	LtpSessionId	sessionId;
-	unsigned char	reasonCode;
-	unsigned char	endOfBlock;
-	unsigned int	dataOffset;
-	unsigned int	dataLength;
-	Object		    data;
-    int             receiving_block, notice, do_malloc;
-    vast            len, data_size;
-
-    // Create a pre-allocated buffer for small block sizes. Otherwise, use malloc to
-    // get dynamic memory
-    char prealloc_payload[1024];
-    char *payload;
-
-    // Initialize pre-allocated buffer
-    memset(prealloc_payload, 0, sizeof(prealloc_payload));
-
-    // Mark as running
-    receiving_block = 1;
-    state->status = SAP_RUNNING;
-
-    // Process incoming indications
-    while ((state->status == SAP_RUNNING) && (receiving_block == 1)) {
-        // Get the next LTP notice
-        Py_BEGIN_ALLOW_THREADS                                // Release the GIL
-        notice = ltp_get_notice(state->clientId, &type, &sessionId, &reasonCode, 
-                                &endOfBlock, &dataOffset, &dataLength, &data);
-        Py_END_ALLOW_THREADS                                  // Acquire the GIL
-
-        // Handle error while receiving notices
-        if (notice < 0) {
-            PyErr_SetString(PyExc_RuntimeError, "Error getting LTP notice");
-            return NULL;
-        }
-
-        // Handle different notice types
-        switch (type) {
-            case LtpExportSessionComplete:      // Transmit success
-                // Do not mark reception of block complete here. This should be done by the 
-                // LtpRecvRedPart case.
-                break;
-            case LtpImportSessionCanceled:      // Cancelled sessions. No data has been received yet.
-                // Release any data and throw exception
-                ltp_release_data(data);
-                sprintf(err_msg, "LTP import session cancelled (reason code=%d)", (unsigned int)reasonCode);
-                PyErr_SetString(PyExc_RuntimeError, err_msg);
-                return NULL;
-            case LtpExportSessionCanceled:      // Transmit failure. Some data might have been received already.
-                // Release any data and throw exception
-                ltp_release_data(data);
-                sprintf(err_msg, "LTP export session cancelled (reason code=%d)", (unsigned int)reasonCode);
-                PyErr_SetString(PyExc_RuntimeError, err_msg);
-                return NULL;
-            case LtpRecvRedPart:
-                // If this is not the end of the block, you are dealing with a block that is
-                // partially green, partially red. This is not allowed.
-                if (!endOfBlock) {
-                    ltp_release_data(data);
-                    PyErr_SetString(PyExc_NotImplementedError, "An LTP block cannot have green parts");
-                    return NULL;
-                }
-                
-                // Mark that reception of block has ended
-                receiving_block = 0;
-                break;
-            case LtpRecvGreenSegment:
-                // Release any data and throw exception
-                ltp_release_data(data);
-                PyErr_SetString(PyExc_NotImplementedError, "Only red part of LTP is supported");
-                return NULL;
-            default:
-                break;
-        }
-
-        // Make sure other tasks have a chance to run
-        sm_TaskYield();
-    }
-
-    // If you exited because of closing, throw error
-    if (state->status == SAP_CLOSING) {
-        PyErr_SetString(PyExc_ConnectionAbortedError, "LTP reception closed.");
-        return NULL;
-    }
-
-    // If no block received by now and you are not closing, error.
-    if (receiving_block == -1) {
-        PyErr_SetString(PyExc_RuntimeError, "LTP block was not delivered as expected.");
-        return NULL;
-    }
-
-    // Get ION SDR
-    sdr = getIonsdr();
-
-    // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    data_size = zco_source_data_length(sdr, data);
-    sdr_exit_xn(sdr);
-
-    // Check if we need to allocate memory dynamically
-    do_malloc = (data_size > 1024);
-
-    // Allocate memory for payload
-    payload = do_malloc ? (char*)malloc(data_size) : prealloc_payload;
-
-    // Prepare to receive next block
-    zco_start_receiving(data, &reader);
-
-    // Get bundle data
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    len = zco_receive_source(sdr, &reader, data_size, payload);
-    if (!sdr_pyend_xn(sdr)) return NULL;
-
-    // Handle error while getting the payload
-    if (len < 0) {
-        sprintf(err_msg, "Error extracting data from block");
-        PyErr_SetString(PyExc_IOError, err_msg);
-
-        // Clean up tasks
-        if (do_malloc) free(payload);
-        return NULL;
-    }
-
-    // Build return object
-    PyObject *ret = Py_BuildValue("y#", payload, len);
-
-    // Release LTP object now that you are done with it.
-    ltp_release_data(data);
-
-    // Deallocate memory
-    if (do_malloc) free(payload);
-
-    return ret;
-}
-
 static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
     // Define variables
     LtpSAP   *state;
-    PyObject *ret;
-    
+    RxPayload msg = {NULL, 0, 0};
+    msg.payload = msg.payload_prealloc;
+    int ok;
+
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
         return NULL;
 
-    // Trigger reception of data
-    ret = receive_data(state);
+    // Mark as running
+    state->status = SAP_RUNNING;
 
-    // Close if necessary. Otherwise set to IDLE
-    if (state->status == SAP_CLOSING) {
-        close_access_point(state);
-    } else {
-        state->status = SAP_IDLE;
+    // Release GIL and receive data
+    Py_BEGIN_ALLOW_THREADS                                
+    ok = base_ltp_receive(state, &msg);
+    Py_END_ALLOW_THREADS
+
+    // Handle errors
+    switch(ok) {
+        case -1:
+            pyion_SetExc(PyExc_RuntimeError, "LTP import session cancelled.");
+            break;
+        case -2:
+            pyion_SetExc(PyExc_RuntimeError, "LTP export session cancelled.");
+            break;
+        case -3:
+            pyion_SetExc(PyExc_NotImplementedError, "An LTP block cannot have green parts.");
+            break;
+        case -4:
+            pyion_SetExc(PyExc_NotImplementedError, "Only red part of LTP is supported.");
+            break;
+        case -5:
+            pyion_SetExc(PyExc_NotImplementedError, "Error extracting data from block.");
+            break;
+        case PYION_CONN_ABORTED_ERR:
+            pyion_SetExc(PyExc_ConnectionAbortedError, "LTP reception closed.");
+            break;
+        case PYION_IO_ERR:
+            pyion_SetExc(PyExc_ConnectionError, "Error getting LTP notice or segment.");
+            break;
+        case PYION_SDR_ERR:
+            pyion_SetExc(PyExc_MemoryError, "SDR memory could not be read.");
+            break;
     }
+
+    // If error, return
+    if (ok < PYION_OK) return NULL;
+
+    // Build return object
+    PyObject* ret = Py_BuildValue("y#", msg.payload, msg.len);
+
+    // If you allocated memory for this payload, free it here
+    if (msg.do_malloc) free(msg.payload);
 
     // Return value
     return ret;
 }
+
+/* ============================================================================
+ * === EOF
+ * ============================================================================ */

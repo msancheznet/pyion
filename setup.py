@@ -104,11 +104,15 @@ else:
 
 # Set paths for compiling _admin
 ion_path = Path(ion_path)
-bp_lib   = ion_path/'bp'/'library'
-cfdp_lib = ion_path/'cfdp'/'library'
-ltp_lib  = ion_path/'ltp'/'library'
-cfdp_inc = ion_path/'cfdp'/'include'
-ici_inc  = ion_path/'ici'/'include'
+locs = [
+    ion_path/'bpv6'/'library',
+    ion_path/'cfdp'/'library',
+    ion_path/'ltp'/'library',
+    ion_path/'bpv6'/'include',
+    ion_path/'cfdp'/'include',
+    ion_path/'ici'/'include'
+]
+locs = [str(loc) for loc in locs]
 
 # ========================================================================================
 # === Figure out compile-time options
@@ -141,18 +145,18 @@ compile_args = [
 
 # Define ION administrative extension
 _admin = Extension('_admin',
-                include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib), str(cfdp_lib), str(ici_inc)],
+                include_dirs=locs,
                 libraries=['ici', 'bp', 'ltp', 'cfdp'],
-                library_dirs=[str(ion_lib)],
+                library_dirs=locs,
                 sources=['./pyion/_admin.c'],
                 extra_compile_args=compile_args
                 )
 
 # Define the ION-BP extension and related directories
 _bp = Extension('_bp',
-                include_dirs=[str(ion_inc), str(bp_lib)],
+                include_dirs=locs,
                 libraries=['bp', 'ici','ltp', 'cfdp'],
-                library_dirs=[str(ion_lib), str(bp_lib)],
+                library_dirs=locs,
                 sources=['./pyion/_bp.c',
                          './pyion/_utils.c',
                          './pyion/base_bp.c'],
@@ -161,27 +165,29 @@ _bp = Extension('_bp',
 
 # Define the ION-CFDP extension and related directories
 _cfdp = Extension('_cfdp',
-                include_dirs=[str(ion_inc), str(cfdp_inc), str(cfdp_lib)],    
+                include_dirs=locs,    
                 libraries=['cfdp', 'ici'],
-                library_dirs=[str(ion_lib), str(cfdp_lib)],
+                library_dirs=locs,
                 sources=['./pyion/_cfdp.c'],
                 extra_compile_args=compile_args
                 )
 
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib)],
+                include_dirs=locs,
                 libraries=['ltp', 'ici'],
-                library_dirs=[str(ion_lib), str(bp_lib), str(ltp_lib)],
-                sources=['./pyion/_ltp.c'],
+                library_dirs=locs,
+                sources=['./pyion/_ltp.c',
+                         './pyion/_utils.c',
+                         './pyion/base_ltp.c'],
                 extra_compile_args=compile_args
                 )
 
 # Define the ION memory extension and related directories
 _mem = Extension('_mem',
-                include_dirs=[str(ion_inc)],
+                include_dirs=locs,
                 libraries=['ici', 'bp'],
-                library_dirs=[str(ion_lib)],
+                library_dirs=locs,
                 sources=['./pyion/_mem.c'],
                 extra_compile_args=compile_args
                 )

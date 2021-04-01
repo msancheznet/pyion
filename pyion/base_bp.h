@@ -85,5 +85,4 @@ int base_bp_receive_data(BpSapState *state, RxPayload *msg);
 // Interrupt the reception of data via an endpoint
 int base_bp_interrupt(BpSapState *state);
 
-
 #endif

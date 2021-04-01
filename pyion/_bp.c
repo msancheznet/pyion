@@ -168,7 +168,7 @@ static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
 
     // Error handling
     if (ok < 0) {
-        pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
+        pyion_SetExc(PyExc_SystemError, "Cannot detach from BP engine.");
         return NULL;
     }
 
@@ -196,7 +196,7 @@ static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
     ok = base_bp_open(&state, ownEid, detained, mem_ctrl);
     Py_END_ALLOW_THREADS
 
-    // Allocate memory for state and initialize to zeros
+    // Handle errors
     switch(ok) {
         case -1:
             pyion_SetExc(PyExc_RuntimeError, "Cannot malloc for BP state.");
