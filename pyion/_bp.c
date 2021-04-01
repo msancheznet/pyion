@@ -396,7 +396,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     PyObject *ret;
 
     int status;
-    BpRx msg = {NULL, 0, 0};
+    BpRx msg = {0, 0, 0};
     msg.payload = msg.payload_prealloc;
  
 
