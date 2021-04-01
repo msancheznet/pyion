@@ -23,9 +23,8 @@ int base_bp_attach() {
 }
 
 
-int base_bp_detach() {
-    bp_detach();
-    return 0;
+void base_bp_detach() {
+    return bp_detach();
 }
 
 
@@ -50,8 +49,8 @@ int base_bp_interrupt(BpSapState *state) {
     return 0;
 }
 
-int base_create_bp_tx_payload(TxPayload **obj) {
-    TxPayload *txInfo = malloc(sizeof(TxPayload));
+int base_create_bp_tx_payload(BpTx **obj) {
+    BpTx *txInfo = malloc(sizeof(BpTx));
     txInfo->destEid = NULL;
     txInfo->reportEid = NULL;
     txInfo->ttl = 0;
@@ -66,7 +65,7 @@ int base_create_bp_tx_payload(TxPayload **obj) {
     *obj = txInfo;
 }
 
-int base_init_bp_tx_payload(TxPayload *txInfo) {
+int base_init_bp_tx_payload(BpTx *txInfo) {
     txInfo->destEid = NULL;
     txInfo->reportEid = NULL;
     txInfo->ttl = 0;
@@ -81,16 +80,16 @@ int base_init_bp_tx_payload(TxPayload *txInfo) {
     return 0;
 }
 
-int base_stack_destroy_bp_tx_payload(TxPayload *obj) {
+int base_stack_destroy_bp_tx_payload(BpTx *obj) {
     return 0;
 }
 
-int base_heap_destroy_bp_tx_payload(TxPayload *obj) {
+int base_heap_destroy_bp_tx_payload(BpTx *obj) {
    return 0;
 }
 
 
-int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
+int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
 
     // Define variables
     int data_size, len, rx_ret, do_malloc;
@@ -180,7 +179,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, RxPayload *msg){
 }
 
 
-int base_bp_receive_data(BpSapState *state, RxPayload *msg) {
+int base_bp_receive_data(BpSapState *state, BpRx *msg) {
     BpDelivery dlv;
 
     int status = help_receive_data(state, &dlv, msg);
@@ -252,7 +251,7 @@ return 0;
 /*destEid, reportEid, ttl, classOfService, 
            custodySwitch, rrFlags, ackReq, ancillaryData, 
            bundleZco, &newBundle*/
-int base_bp_send(BpSapState *state, TxPayload *txInfo)
+int base_bp_send(BpSapState *state, BpTx *txInfo)
 {
 
     Object newBundle;
