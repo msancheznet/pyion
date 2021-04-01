@@ -79,7 +79,7 @@ total_sent = 0
 def send_data(ept):
     global total_sent
     
-    for i in range(10):
+    for i in range(100):
         msg = json.dumps({
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),
             'thread_id': current_thread().name,
@@ -87,7 +87,7 @@ def send_data(ept):
         })
         print('[{}/{}] Sending {} bytes'.format(current_thread().name, i+1, sys.getsizeof(msg)))
         ept.bp_send(dest_eid, msg)
-        time.sleep(0.01)
+        #time.sleep(0.1)
         total_sent += sys.getsizeof(msg)    # NOT thread safe, but we don't care
 
 def send_data_thread(ept):
