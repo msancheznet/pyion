@@ -268,10 +268,10 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
 
     // Insert data to SDR
     if (!sdr_pybegin_xn(sdr))
-        return 1;
+        return PYION_SDR_ERR;
     bundleSdr = sdr_insert(sdr, txInfo->data, (size_t)txInfo->data_size);
     if (!sdr_pyend_xn(sdr))
-        return 1;
+        return PYION_SDR_ERR;
 
     // If insert failed, cancel transaction and exit
     //sdr_end_xn(sdr);
@@ -279,7 +279,7 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, txInfo->data_size,
                              txInfo->classOfService, 0, ZcoOutbound, state->attendant);
     if (bundleZco == 0) {
-        return 2;
+        return PYION_IO_ERR;
     }
     ok = bp_send(state->sap, txInfo->destEid, txInfo->reportEid, txInfo->ttl, 
                 txInfo->classOfService, txInfo->custodySwitch, txInfo->rrFlags, 
@@ -295,7 +295,7 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
         // Handle error in bp_memo
         if (ok < 0)
         {
-            return 3;
+            return ok;
         }
     }
 
