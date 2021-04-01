@@ -6,3 +6,6 @@ pyion.egg-info
 *.so
 
 *.pyc
+
+tests/ltp_tests/nodes/*
+tests/ltp_tests/nodes/1/ionstart
