@@ -333,6 +333,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     BpSapState *state = NULL;
     TxPayload txInfo;
 
+    base_init_bp_tx_payload(&txInfo);
 
     int status; //return status of bp_send
 
@@ -342,7 +343,8 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
                           &classOfService, (int *)&custodySwitch, &rrFlags, &ackReq, &retxTimer,
                           &data, &data_size))
         return NULL;
-
+ 
+    // Create TxPayload struct
     txInfo.destEid = destEid;
     txInfo.reportEid = reportEid;
     txInfo.ttl = ttl;
@@ -353,10 +355,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     txInfo.retxTimer = retxTimer;
     txInfo.data = data;
     txInfo.data_size = data_size;
-
     txInfo.ancillaryData = ancillaryData;
-
-    
 
     // Release the GIL
      
@@ -364,20 +363,22 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
            status = base_bp_send(state, &txInfo);                        
     Py_END_ALLOW_THREADS
 
+    base_stack_destroy_bp_tx_payload(&txInfo);
+
     switch(status) {
         case 0: 
             // Return True to indicate success
             Py_RETURN_TRUE;
             break;
-        case 1: 
+        case PYION_SDR_ERR: 
              pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
             return NULL;
-        case 2:
+        case PYION_IO_ERR:
           pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
           return NULL;
         case 3:
             pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", 3);
-
+            return NULL;
         default:
             pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", status);
             return NULL;
@@ -412,7 +413,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     status = base_bp_receive_data(state, &msg);
     Py_END_ALLOW_THREADS
 
-    printf("%d",status);
+    //printf("%d",status);
 
     // Build return object
     ret = Py_BuildValue("y#", msg.payload, msg.len);
