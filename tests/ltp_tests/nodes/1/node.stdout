@@ -17,5 +17,3 @@ Stopping ltpadmin.
 Stopping ipnadmin.
 Syntax error at line 339 of bpadmin.c
 Stopping bpadmin.
-eeefNOTE: udplso now gets transmission data rate from the contact plan.  txbps is still accepted on the command line, for backward compatibility, but it is ignored.
-gggshgeeefgggshgeeefgggshgeeefgggshgeeefgggshg

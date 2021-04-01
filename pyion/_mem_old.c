@@ -8,9 +8,15 @@
  * U.S. Government sponsorship acknowledged.
  * =========================================================================== */
 
+#include <platform.h>
+#include <sdr.h>
+#include <ion.h>
+#include <zco.h>
+#include <sdrxn.h>
+#include <psm.h>
+#include <memmgr.h>
 #include <Python.h>
 
-#include "base_mem.h"
 #include "_utils.c"
 
 /* ============================================================================
@@ -70,23 +76,25 @@ PyMODINIT_FUNC PyInit__mem(void) {
 
 static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     // Define variables
-    int i, ok;
+    int             i;
+    Sdr		        sdr;
 	SdrUsageSummary	sdrUsage;
     PyObject        *sp_blocks = PyDict_New();
     PyObject        *lp_blocks = PyDict_New();
     size_t          sp_blk_size = 0;
     size_t          lp_blk_size = WORD_SIZE;
 
-    // Release GIL and dump SDR
-    Py_BEGIN_ALLOW_THREADS                                
-    ok = base_sdr_dump(&sdrUsage);
-    Py_END_ALLOW_THREADS
-
-    // Handle errors
-    if (ok < 0) {
+    // Attach to SDR and start using it
+    sdr = getIonsdr();
+    if (sdr == NULL) {
         pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's SDR.");
         return NULL;
     }
+
+    // Get the state of the SDR
+    if (!sdr_pybegin_xn(sdr)) return NULL;
+    sdr_usage(sdr, &sdrUsage);
+    sdr_pyexit_xn(sdr);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = sdrUsage.smallPoolFree;
@@ -137,23 +145,23 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
     // Define variables
-    int i, ok;
+    int             i;
+	PsmPartition    psm;
     PsmUsageSummary	psmUsage;
     PyObject        *sp_blocks = PyDict_New();
     PyObject        *lp_blocks = PyDict_New();
     size_t          sp_blk_size = 0;
     size_t          lp_blk_size = WORD_SIZE;
 
-    // Release GIL and dump SDR
-    Py_BEGIN_ALLOW_THREADS                                
-    ok = base_psm_dump(&psmUsage);
-    Py_END_ALLOW_THREADS
-
-    // Handle errors
-    if (ok < 0) {
+    // Get the PSM
+    psm = getIonwm();
+    if (psm == NULL) {
         pyion_SetExc(PyExc_MemoryError, "Cannot attach to ION's PSM.");
         return NULL;
     }
+
+    // Get the state of the PSM
+    psm_usage(psm, &psmUsage);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = psmUsage.smallPoolFree;

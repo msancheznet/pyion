@@ -188,7 +188,9 @@ _mem = Extension('_mem',
                 include_dirs=locs,
                 libraries=['ici', 'bp'],
                 library_dirs=locs,
-                sources=['./pyion/_mem.c'],
+                sources=['./pyion/_mem.c',
+                         './pyion/_utils.c',
+                         './pyion/base_mem.c'],
                 extra_compile_args=compile_args
                 )
 

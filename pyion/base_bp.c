@@ -16,7 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <bp.h>
 
 #include "base_bp.h"
 #include "_utils.c"
