@@ -10,28 +10,27 @@ int base_ltp_attach(void) {
     return ltp_attach();
 }
 
-int base_ltp_detach(void) {
-    ltp_detach();
-    return 0;
+void base_ltp_detach(void) {
+    return ltp_detach();
 }
 
-int base_ltp_open(unsigned int clientId, LtpSAP *state) {
+int base_ltp_open(unsigned int clientId, LtpSAP **state) {
     char err_msg[150];
     // Allocate memory for state and initialize to zeros
-    state = (LtpSAP*)malloc(sizeof(LtpSAP));
-    if (state == NULL) {
+    //Replaced memset with calloc for cleaner code
+    *state = (LtpSAP*)calloc(1,sizeof(LtpSAP));
+    if (*state == NULL) {
         sprintf(err_msg, "Cannot malloc for LTP state.");
         return PYION_MALLOC_ERR;
     }
 
     // Set memory contents to zeros
-    memset((char *)state, 0, sizeof(LtpSAP));
     int retStatus = ltp_open(clientId);
 
     if (retStatus < 0) return retStatus;
      // Fill state information
-    state->clientId = clientId;
-    state->status = SAP_IDLE;
+    (*state)->clientId = clientId;
+    (*state)->status = SAP_IDLE;
     return retStatus;
 
 }
