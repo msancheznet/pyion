@@ -110,21 +110,18 @@ PyMODINIT_FUNC PyInit__ltp(void) {
 static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args) {
     // Define variables
     char err_msg[150];
-
     // Try to attach to BP agent
     if (base_ltp_attach() < 0) {
         sprintf(err_msg, "Cannot attach to LTP engine. Is ION running on this host?");
         PyErr_SetString(PyExc_SystemError, err_msg);
         return NULL;
     }
-
     Py_RETURN_NONE;
 }
 
 static PyObject *pyion_ltp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
     base_ltp_detach();
-
     Py_RETURN_NONE;
 }
 
@@ -147,7 +144,7 @@ static PyObject *pyion_ltp_open(PyObject *self, PyObject *args) {
 
     // Open connection to LTP client
 
-    int open_status = base_ltp_open(clientId, state);
+    int open_status = base_ltp_open(clientId, &state);
 
     if (open_status < 0) {
         switch (open_status) {
@@ -255,7 +252,7 @@ static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
  * === Receive Functionality
  * ============================================================================ */
 
-static PyObject *receive_data(LtpSAP *state){
+static int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
     // Define variables
     char            err_msg[150];
     ZcoReader	    reader;
@@ -272,11 +269,7 @@ static PyObject *receive_data(LtpSAP *state){
 
     // Create a pre-allocated buffer for small block sizes. Otherwise, use malloc to
     // get dynamic memory
-    char prealloc_payload[1024];
-    char *payload;
-
-    // Initialize pre-allocated buffer
-    memset(prealloc_payload, 0, sizeof(prealloc_payload));
+    
 
     // Mark as running
     receiving_block = 1;
@@ -285,14 +278,12 @@ static PyObject *receive_data(LtpSAP *state){
     // Process incoming indications
     while ((state->status == SAP_RUNNING) && (receiving_block == 1)) {
         // Get the next LTP notice
-        Py_BEGIN_ALLOW_THREADS                                // Release the GIL
         notice = ltp_get_notice(state->clientId, &type, &sessionId, &reasonCode, 
                                 &endOfBlock, &dataOffset, &dataLength, &data);
-        Py_END_ALLOW_THREADS                                  // Acquire the GIL
 
         // Handle error while receiving notices
         if (notice < 0) {
-            PyErr_SetString(PyExc_RuntimeError, "Error getting LTP notice");
+            //Need to set error string receiving notices.
             return NULL;
         }
 
@@ -341,13 +332,13 @@ static PyObject *receive_data(LtpSAP *state){
 
     // If you exited because of closing, throw error
     if (state->status == SAP_CLOSING) {
-        PyErr_SetString(PyExc_ConnectionAbortedError, "LTP reception closed.");
+        //PyErr_SetString(PyExc_ConnectionAbortedError, "LTP reception closed.");
         return NULL;
     }
 
     // If no block received by now and you are not closing, error.
     if (receiving_block == -1) {
-        PyErr_SetString(PyExc_RuntimeError, "LTP block was not delivered as expected.");
+        //PyErr_SetString(PyExc_RuntimeError, "LTP block was not delivered as expected.");
         return NULL;
     }
 
@@ -360,52 +351,54 @@ static PyObject *receive_data(LtpSAP *state){
     sdr_exit_xn(sdr);
 
     // Check if we need to allocate memory dynamically
-    do_malloc = (data_size > 1024);
+    do_malloc = 1;
 
     // Allocate memory for payload
-    payload = do_malloc ? (char*)malloc(data_size) : prealloc_payload;
+    payloadObj->payload =  (char*)malloc(data_size);
 
     // Prepare to receive next block
     zco_start_receiving(data, &reader);
 
     // Get bundle data
     if (!sdr_pybegin_xn(sdr)) return NULL;
-    len = zco_receive_source(sdr, &reader, data_size, payload);
+    payloadObj->len = zco_receive_source(sdr, &reader, data_size, payloadObj->payload);
     if (!sdr_pyend_xn(sdr)) return NULL;
+
 
     // Handle error while getting the payload
     if (len < 0) {
         sprintf(err_msg, "Error extracting data from block");
-        PyErr_SetString(PyExc_IOError, err_msg);
+        //PyErr_SetString(PyExc_IOError, err_msg);
 
         // Clean up tasks
-        if (do_malloc) free(payload);
+        
         return NULL;
     }
 
     // Build return object
-    PyObject *ret = Py_BuildValue("y#", payload, len);
+   
 
     // Release LTP object now that you are done with it.
     ltp_release_data(data);
 
     // Deallocate memory
-    if (do_malloc) free(payload);
+    if (do_malloc) free(payloadObj->payload);
 
-    return ret;
+    return 0;
 }
 
 static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
     // Define variables
     LtpSAP   *state;
-    PyObject *ret;
+    LtpRxPayload *payloadObj;
+    int ok;
     
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
         return NULL;
 
     // Trigger reception of data
-    ret = receive_data(state);
+    ok = base_ltp_receive_data(state, payloadObj);
 
     // Close if necessary. Otherwise set to IDLE
     if (state->status == SAP_CLOSING) {
@@ -413,6 +406,10 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
     } else {
         state->status = SAP_IDLE;
     }
+
+    PyObject *ret = Py_BuildValue("y#", payloadObj->payload, payloadObj->len);
+
+    free(payloadObj->payload);
 
     // Return value
     return ret;

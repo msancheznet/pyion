@@ -42,9 +42,9 @@ Attaches to ltp endpoint.
 */
 int base_ltp_attach(void);
 
-int base_ltp_detach(void);
+void base_ltp_detach(void);
 
-int base_ltp_open(unsigned int clientId, LtpSAP *state);
+int base_ltp_open(unsigned int clientId, LtpSAP **state);
 
 int base_ltp_close(LtpSAP *state);
 
