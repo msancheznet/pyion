@@ -211,7 +211,7 @@ int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
     ltp_release_data(data);
 
     // Deallocate memory
-    if (do_malloc) free(payloadObj->payload);
+   
 
     return 0;
 }
