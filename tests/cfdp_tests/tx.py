@@ -64,15 +64,15 @@ ch_err_prob = 0.01
 # =================================================================
 
 # Create proxy to netem
-npxy = netem.Proxy('eth0')
+#npxy = netem.Proxy('eth0')
 
 # Add a delay and loss rule
-npxy.add_delay_rule(delay=ch_delay, jitter=ch_jitter, units='ms')
-npxy.add_bernoulli_loss_rule(error_prob=ch_err_prob)
+#npxy.add_delay_rule(delay=ch_delay, jitter=ch_jitter, units='ms')
+#npxy.add_bernoulli_loss_rule(error_prob=ch_err_prob)
 
 # Commit rules
-npxy.commit_rules()
-print('Channel error probability = {}.'.format(ch_err_prob))
+#npxy.commit_rules()
+#print('Channel error probability = {}.'.format(ch_err_prob))
 
 # =================================================================
 # === Define event handlers
@@ -93,10 +93,6 @@ def cfdp_event_handler(ev_type, ev_params):
 # Create a proxies to ION
 bpxy = pyion.get_bp_proxy(node_nbr)
 cpxy = pyion.get_cfdp_proxy(node_nbr)
-
-# Attach to ION's BP and CFDP
-bpxy.bp_attach()
-cpxy.cfdp_attach()
 
 # Open a endpoint and set its properties.
 ept = bpxy.bp_open(orig_eid, **ept_props)
@@ -130,7 +126,7 @@ finally:
     bpxy.bp_close(orig_eid)
 
     # Clear network rules
-    npxy.delete_rules()
+    #npxy.delete_rules()
 
 # =================================================================
 # === EOF

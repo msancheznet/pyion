@@ -48,10 +48,6 @@ tfmt = '%m-%d-%Y %H:%M:%S.%f'
 bpxy = pyion.get_bp_proxy(node_nbr)
 cpxy = pyion.get_cfdp_proxy(node_nbr)
 
-# Attach to ION's BP and CFDP
-bpxy.bp_attach()
-cpxy.cfdp_attach()
-
 # ===================================================================================
 # === Open CFDP engine and BP endpoints
 # ===================================================================================

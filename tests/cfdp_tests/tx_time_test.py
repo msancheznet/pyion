@@ -85,10 +85,6 @@ npxy = netem.Proxy('eth0')
 bpxy = pyion.get_bp_proxy(node_nbr)
 cpxy = pyion.get_cfdp_proxy(node_nbr)
 
-# Attach to ION's BP and CFDP
-bpxy.bp_attach()
-cpxy.cfdp_attach()
-
 # ===================================================================================
 # === Open CFDP engine and BP endpoints
 # ===================================================================================
@@ -184,10 +180,10 @@ for i, per in enumerate(ch_err_prob, start=1):
     print('{}.a) Starting experiment with PER={:.2e}'.format(i,per))
 
     # Set channel properties
-    npxy.reset()
-    npxy.add_delay_rule(delay=ch_delay, jitter=ch_jitter, units='ms')
-    npxy.add_random_loss_rule(error_prob=per)
-    npxy.commit_rules()
+    #npxy.reset()
+    #npxy.add_delay_rule(delay=ch_delay, jitter=ch_jitter, units='ms')
+    #npxy.add_random_loss_rule(error_prob=per)
+    #npxy.commit_rules()
 
     # Send file using CFDP
     start_CFDP_transaction(file_name, m_hash, per, i==len(ch_err_prob))

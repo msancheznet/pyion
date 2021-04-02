@@ -71,10 +71,6 @@ def cfdp_metadata_handler(ev_type, ev_params):
 bpxy = pyion.get_bp_proxy(node_nbr)
 cpxy = pyion.get_cfdp_proxy(node_nbr)
 
-# Attach to ION
-bpxy.bp_attach()
-cpxy.cfdp_attach()
-
 # Open a endpoint and set its properties.
 ept = bpxy.bp_open(EID)
 
