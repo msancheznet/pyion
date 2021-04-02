@@ -168,7 +168,9 @@ _cfdp = Extension('_cfdp',
                 include_dirs=locs,    
                 libraries=['cfdp', 'ici'],
                 library_dirs=locs,
-                sources=['./pyion/_cfdp.c'],
+                sources=['./pyion/_cfdp.c',
+                         './pyion/_utils.c',
+                         './pyion/base_cfdp.c'],
                 extra_compile_args=compile_args
                 )
 
