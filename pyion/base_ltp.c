@@ -117,9 +117,7 @@ int base_ltp_send(LtpSAP *state, unsigned long long destEngineId, char* data, in
     // Create ZCO object (not blocking because there is no attendant)
     item = ionCreateZco(ZcoSdrSource, extent, 0, data_size,
                         0, 0, ZcoOutbound, NULL); 
-    if (item == 0 || item == (Object)ERROR) {
-        return PYION_ZCO_ERR;
-    }
+    ZCO_CREATE_ERROR(item)                        
 
     // Send using LTP protocol. All data is sent as RED LTP by definition.
     // NOTE 1: SessionId is filled by ``ltp_send``, but you do not care about it

@@ -49,8 +49,8 @@
  * === ZCO MACROS
  * ============================================================================ */
 
-#define ZCO_CREATE_ERROR \
-    if (bundleZco == 0 || bundleZco == (Object) ERROR) { \
+#define ZCO_CREATE_ERROR(obj) \
+    if (obj == 0 || obj == (Object)ERROR) { \
         return PYION_ZCO_ERR; \
     }
 

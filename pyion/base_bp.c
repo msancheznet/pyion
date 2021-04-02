@@ -122,7 +122,7 @@ int base_bp_send(BpSapState *state, TxPayload *txInfo)
     // Create ZCO object
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, txInfo->data_size,
                              txInfo->classOfService, 0, ZcoOutbound, state->attendant);
-    ZCO_CREATE_ERROR
+    ZCO_CREATE_ERROR(bundleZco)
 
     // Send bundle via ION
     ok = bp_send(state->sap, txInfo->destEid, txInfo->reportEid, txInfo->ttl, 
