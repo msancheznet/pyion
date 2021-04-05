@@ -171,19 +171,6 @@ PyMODINIT_FUNC PyInit__cfdp(void) {
  * === Define structures for this module
  * ============================================================================ */
 
-typedef struct {
-	CfdpHandler		    faultHandlers[16];
-	CfdpNumber		    destinationEntityNbr;
-	char			    *sourceFileName;
-	char			    destFileNameBuf[256];
-	char			    *destFileName;
-	BpUtParms		    utParms;
-	unsigned int		closureLatency;
-	CfdpMetadataFn		segMetadataFn;
-	MetadataList		msgsToUser;
-	MetadataList		fsRequests;
-	CfdpTransactionId	transactionId;
-} CfdpReqParms;
 
 /* ============================================================================
  * === Define global variables
