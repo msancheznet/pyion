@@ -169,7 +169,8 @@ _cfdp = Extension('_cfdp',
                 include_dirs=[str(ion_inc), str(cfdp_inc)],    
                 libraries=['cfdp', 'ici'],
                 library_dirs=[str(ion_lib), str(cfdp_lib)],
-                sources=['./pyion/_cfdp.c'],
+                sources=['./pyion/_cfdp.c',
+                './pyion/base_cfdp.c'],
                 extra_compile_args=compile_args
                 )
 
@@ -189,7 +190,8 @@ _mem = Extension('_mem',
                 include_dirs=[str(ion_inc)],
                 libraries=['ici', 'bp', 'cfdp', 'ltp'],        # bp is required
                 library_dirs=[str(ion_lib)],
-                sources=['./pyion/_mem.c'],
+                sources=['./pyion/_mem.c'
+                ],
                 extra_compile_args=compile_args
                 )
 
