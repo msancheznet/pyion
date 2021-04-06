@@ -186,7 +186,13 @@ static PyObject *pyion_cfdp_attach(PyObject *self, PyObject *args) {
     char err_msg[150];
 
     // Try to attach to BP agent
-    if (base_cfdp_attach() < 0) {
+    int result;
+
+    Py_BEGIN_ALLOW_THREADS
+    result = base_cfdp_attach();
+    Py_END_ALLOW_THREADS
+
+    if (result < 0) {
         sprintf(err_msg, "Cannot attach to CFDP engine. Is ION running on this host? If so, is CFDP being used?");
         PyErr_SetString(PyExc_SystemError, err_msg);
         return NULL;
@@ -236,9 +242,9 @@ static PyObject *pyion_cfdp_open(PyObject *self, PyObject *args) {
         return NULL;
 
     // Initialize variables
-    Py_BEGIN_ALLOW_THREADS;
+    //Py_BEGIN_ALLOW_THREADS;
     base_cfdp_open(params, entityId, criticality);
-    Py_END_ALLOW_THREADS;
+    //Py_END_ALLOW_THREADS;
     // Return the memory address of the SAP for this endpoint as an unsined long
     PyObject *ret = Py_BuildValue("k", params);
     return ret;
