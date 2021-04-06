@@ -54,7 +54,7 @@ class Entity():
 		self._ok_transaction = False
 
 		# Start a thread to monitor all events
-		self.th = Thread(target=self._monitor_events, daemon=True)
+		self.th = Thread(target=self._monitor_events, daemon=False)
 		self.th.start()
 
 	def __del__(self):
