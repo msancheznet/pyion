@@ -14,6 +14,7 @@
 
 #include <cfdp.h>
 #include <bputa.h>
+#include "base_cfdp.h"
 
 /* ============================================================================
  * === _cfdp module definitions
@@ -227,10 +228,10 @@ static PyObject *pyion_cfdp_open(PyObject *self, PyObject *args) {
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "Kiiiii", \
     (unsigned long long *)&entityId, 
-    &(params->utParams.lifespan), 
-    &(params->utParams.classOfService),
-    &(params->utParams.ordinal), 
-    &(params->utParams.srrFlags), 
+    &(params->utParms.lifespan), 
+    &(params->utParms.classOfService),
+    &(params->utParms.ancillaryData.ordinal), 
+    &(params->utParms.srrFlags), 
     &(criticality)))
         return NULL;
 
