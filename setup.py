@@ -62,8 +62,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-3.7.0'
-__release__ = 'R2020a'
+__version__ = 'pyion-3.7.2'
+__release__ = 'R2021a'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -102,7 +102,7 @@ else:
     ion_inc = (lib_path.parent)/'include'   # ION headers (.h)
     ion_lib = lib_path                      # ION shared libraries (.so)
 
-# Set paths for compiling _admin
+# Set paths for compiling extensions
 ion_path = Path(ion_path)
 locs = [
     ion_path/'bpv6'/'library',
