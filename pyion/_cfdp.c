@@ -185,7 +185,7 @@ static PyObject *pyion_cfdp_attach(PyObject *self, PyObject *args) {
     char err_msg[150];
 
     // Try to attach to BP agent
-    if (cfdp_attach() < 0) {
+    if (base_cfdp_attach() < 0) {
         sprintf(err_msg, "Cannot attach to CFDP engine. Is ION running on this host? If so, is CFDP being used?");
         PyErr_SetString(PyExc_SystemError, err_msg);
         return NULL;
@@ -197,7 +197,7 @@ static PyObject *pyion_cfdp_attach(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_cfdp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
-    cfdp_detach();
+    base_cfdp_detach();
 
     // Return True to indicate success
     Py_RETURN_NONE;
@@ -211,7 +211,7 @@ static PyObject *pyion_cfdp_open(PyObject *self, PyObject *args) {
     // Define variables
     char err_msg[150];
     uvast entityId;
-    int ttl, classOfService, ordinal, srrFlags, criticality;
+    int criticality;
 
     // Allocate memory for CFDP state variable
     CfdpReqParms *params = (CfdpReqParms*)malloc(sizeof(CfdpReqParms));
@@ -225,21 +225,19 @@ static PyObject *pyion_cfdp_open(PyObject *self, PyObject *args) {
     memset((char *)params, 0, sizeof(CfdpReqParms));
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "Kiiiii", (unsigned long long *)&entityId, &ttl, &classOfService,
-                          &ordinal, &srrFlags, &criticality))
+    if (!PyArg_ParseTuple(args, "Kiiiii", \
+    (unsigned long long *)&entityId, 
+    &(params->utParams.lifespan), 
+    &(params->utParams.classOfService),
+    &(params->utParams.ordinal), 
+    &(params->utParams.srrFlags), 
+    &(criticality)))
         return NULL;
 
     // Initialize variables
-    cfdp_compress_number(&(params->destinationEntityNbr), entityId);
-    params->utParms.lifespan = ttl;
-	params->utParms.classOfService = classOfService;
-    params->utParms.srrFlags = srrFlags;
-    params->utParms.ancillaryData.ordinal = ordinal;
-    if (criticality == 1)
-		params->utParms.ancillaryData.flags |= BP_MINIMUM_LATENCY;
-	else
-		params->utParms.ancillaryData.flags &= (~BP_MINIMUM_LATENCY);
-
+    Py_BEGIN_ALLOW_THREADS;
+    base_cfdp_open(params, entityId, criticality);
+    Py_END_ALLOW_THREADS;
     // Return the memory address of the SAP for this endpoint as an unsined long
     PyObject *ret = Py_BuildValue("k", params);
     return ret;
