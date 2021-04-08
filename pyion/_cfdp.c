@@ -307,49 +307,17 @@ static PyObject *pyion_cfdp_add_fs_req(PyObject *self, PyObject *args) {
 
     // Create a file request list if necessary
     if (params->fsRequests == 0)
-        params->fsRequests = cfdp_create_fsreq_list();
+        params->fsRequests = base_cfdp_create_fsreq_list();
 
     // Add file request
-    oK(cfdp_add_fsreq(params->fsRequests, action, firstPathName, secondPathName));
+    oK(base_cfdp_add_fsreq(params->fsRequests, action, firstPathName, secondPathName));
 
     // Return True to indicate success
     Py_RETURN_NONE;
 }
 
-/* ============================================================================
- * === Send/Request Functions (and helpers)
- * ============================================================================ */
 
-static int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
-			unsigned int length, int sourceFileFd, char *buffer) {
-	writeTimestampLocal(getCtime(), buffer);
-	return strlen(buffer) + 1;
-}
 
-static void setParams(CfdpReqParms *params, char *sourceFile, char *destFile, 
-                      int segMetadata, int closureLat, long int mode) {
-    // Fill in basic parameters
-    params->sourceFileName = sourceFile;
-    params->destFileName   = destFile;
-    params->segMetadataFn = (segMetadata==0) ? NULL : noteSegmentTime;
-    params->closureLatency = closureLat;
-
-    // mode = 1: Select unreliable CFDP mode
-    if (mode & 0x01) {
-        params->utParms.ancillaryData.flags |= BP_BEST_EFFORT;
-        return;
-    }
-
-    // mode = 2: Select native BP reliability
-    if (mode & 0x02) {
-        params->utParms.custodySwitch = SourceCustodyRequired;
-        return;
-    }
-
-    // Mode = 3: Select CL reliability
-    params->utParms.ancillaryData.flags &= (~BP_BEST_EFFORT);
-    params->utParms.custodySwitch = NoCustodyRequested;
-}
 
 static PyObject *pyion_cfdp_send(PyObject *self, PyObject *args) {
     // Define variables

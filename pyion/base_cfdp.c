@@ -40,3 +40,47 @@ int base_cfdp_add_usrmsg(MetadataList list, unsigned char *text){
 MetadataList base_cfdp_create_usrmsg_list(void) {
     return cfdp_create_usrmsg_list();
 }
+
+MetadataList base_cfdp_create_fsreq_list(void) {
+    return cfdp_create_fsreq_list();
+}
+
+int base_cfdp_add_fsreq(MetadataList list, CfdpAction action, char *firstFileName, char *secondFileName) {
+    return cfdp_add_fsreq(list, action, firstFileName, secondFileName);
+}
+
+
+void setParams(CfdpReqParms *params, char *sourceFile, char *destFile, 
+                      int segMetadata, int closureLat, long int mode) {
+    // Fill in basic parameters
+    params->sourceFileName = sourceFile;
+    params->destFileName   = destFile;
+    params->segMetadataFn = (segMetadata==0) ? NULL : noteSegmentTime;
+    params->closureLatency = closureLat;
+
+    // mode = 1: Select unreliable CFDP mode
+    if (mode & 0x01) {
+        params->utParms.ancillaryData.flags |= BP_BEST_EFFORT;
+        return;
+    }
+
+    // mode = 2: Select native BP reliability
+    if (mode & 0x02) {
+        params->utParms.custodySwitch = SourceCustodyRequired;
+        return;
+    }
+
+    // Mode = 3: Select CL reliability
+    params->utParms.ancillaryData.flags &= (~BP_BEST_EFFORT);
+    params->utParms.custodySwitch = NoCustodyRequested;
+}
+
+/* ============================================================================
+ * === Send/Request Functions (and helpers)
+ * ============================================================================ */
+
+static int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
+			unsigned int length, int sourceFileFd, char *buffer) {
+	writeTimestampLocal(getCtime(), buffer);
+	return strlen(buffer) + 1;
+}

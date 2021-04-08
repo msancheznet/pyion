@@ -28,3 +28,6 @@ int base_cfdp_compress_number();
 int base_cfdp_open();
 
 MetadataList base_cfdp_create_usrmsg_list();
+
+void setParams(CfdpReqParms *params, char *sourceFile, char *destFile, 
+                      int segMetadata, int closureLat, long int mode);
