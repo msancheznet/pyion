@@ -1,4 +1,6 @@
 #include <cfdp.h>
+#include <bputa.h>
+
 #include "base_cfdp.h"
 /**
  * Worker file to handle pure C function
@@ -29,4 +31,12 @@ int base_cfdp_attach() {
 
 void base_cfdp_detach() {
     return cfdp_detach();
+}
+
+int base_cfdp_add_usrmsg(MetadataList list, unsigned char *text){
+    return cfdp_add_usrmsg(list, text, strlen(text)+1);
+}
+
+MetadataList base_cfdp_create_usrmsg_list(void) {
+    return cfdp_create_usrmsg_list();
 }
