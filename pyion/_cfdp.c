@@ -284,10 +284,10 @@ static PyObject *pyion_cfdp_add_usr_msg(PyObject *self, PyObject *args) {
 
     // Create user message list if necessary
     if (params->msgsToUser == 0)
-        params->msgsToUser = cfdp_create_usrmsg_list();
+        params->msgsToUser = base_cfdp_create_usrmsg_list();
 
     // Add user message
-    oK(cfdp_add_usrmsg(params->msgsToUser, (unsigned char *)usrMsg, strlen(usrMsg)+1));
+    oK(base_cfdp_add_usrmsg(params->msgsToUser, (unsigned char *)usrMsg));
 
     // Return True to indicate success
     Py_RETURN_NONE;
