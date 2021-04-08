@@ -31,3 +31,6 @@ MetadataList base_cfdp_create_usrmsg_list();
 
 void setParams(CfdpReqParms *params, char *sourceFile, char *destFile, 
                       int segMetadata, int closureLat, long int mode);
+
+int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
+			unsigned int length, int sourceFileFd, char *buffer);

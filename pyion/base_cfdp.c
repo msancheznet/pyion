@@ -79,7 +79,7 @@ void setParams(CfdpReqParms *params, char *sourceFile, char *destFile,
  * === Send/Request Functions (and helpers)
  * ============================================================================ */
 
-static int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
+int	noteSegmentTime(uvast fileOffset, unsigned int recordOffset,
 			unsigned int length, int sourceFileFd, char *buffer) {
 	writeTimestampLocal(getCtime(), buffer);
 	return strlen(buffer) + 1;
