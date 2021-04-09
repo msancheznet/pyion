@@ -129,6 +129,7 @@ else:
 # Defined C compilation options for the extensions.
 compile_args = [
     '-g',
+    '-Wall',
     '-O0',
     '-Wl,--no-undefined',
     '-Wno-undef',

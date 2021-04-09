@@ -396,7 +396,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     PyObject *ret;
 
     int status;
-    BpRx msg = {0, 0, 0};
+    BpRx msg;
     msg.payload = msg.payload_prealloc;
  
 
@@ -411,7 +411,23 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     status = base_bp_receive_data(state, &msg);
     Py_END_ALLOW_THREADS
 
-    //printf("%d",status);
+    if (status) { //there was an error, free our memory to prevent a leak.
+            if (msg.do_malloc) free(msg.payload);
+    }
+    switch (status) {
+        case PYION_INTERRUPTED_ERR:
+             pyion_SetExc(PyExc_ConnectionError, "ION Connection Interrupted");
+             return NULL;
+        case PYION_CONN_ABORTED_ERR:
+             pyion_SetExc(PyExc_ConnectionError, "ION Connection aborted error.");
+             return NULL;
+        case PYION_IO_ERR:
+            pyion_SetExc(PyExc_IOError, "ION IO Error");
+            return NULL;
+        case PYION_SDR_ERR:
+            pyion_SetExc(PyExc_MemoryError, "SDR Failure");
+            return NULL;
+    }
 
     // Build return object
     ret = Py_BuildValue("y#", msg.payload, msg.len);

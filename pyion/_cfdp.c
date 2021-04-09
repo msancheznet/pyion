@@ -386,9 +386,7 @@ static PyObject *pyion_cfdp_request(PyObject *self, PyObject *args) {
     task.closureRequested = !(params->closureLatency == 0);
 
     // Tigger CFDP get command
-    if (cfdp_get(&(params->destinationEntityNbr), sizeof(BpUtParms),
-					(unsigned char *) &(params->utParms), NULL, NULL, NULL, 
-                    NULL, 0, NULL, 0, 0, 0, &task, &(params->transactionId)) < 0) {
+    if (base_cfdp_get(params, &task) < 0) {
         sprintf(err_msg, "Cannot do cfdp_get operation, check ion.log.");                     
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
@@ -416,7 +414,7 @@ static PyObject *pyion_cfdp_cancel(PyObject *self, PyObject *args) {
         return NULL;
 
     // Trigger CFDP cancel
-    if (cfdp_cancel(&(params->transactionId)) < 0) {
+    if (base_cfdp_cancel(params) < 0) {
         sprintf(err_msg, "Cannot do cfdp_cancel operation, check ion.log.");                     
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
@@ -436,7 +434,7 @@ static PyObject *pyion_cfdp_suspend(PyObject *self, PyObject *args) {
         return NULL;
 
     // Trigger CFDP suspend
-    if (cfdp_suspend(&(params->transactionId)) < 0) {
+    if (base_cfdp_suspend(params) < 0) {
         sprintf(err_msg, "Cannot do cfdp_suspend operation, check ion.log.");                     
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
@@ -476,7 +474,7 @@ static PyObject *pyion_cfdp_report(PyObject *self, PyObject *args) {
         return NULL;
 
     // Trigger CFDP report
-    if (cfdp_report(&(params->transactionId)) < 0) {
+    if (base_cfdp_report(params) < 0) {
         sprintf(err_msg, "Cannot do cfdp_report operation, check ion.log.");                     
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
@@ -521,7 +519,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Receive the next CFDP event. This is a blocking call
     Py_BEGIN_ALLOW_THREADS                                // Release the GIL
-    rx_ret = cfdp_get_event(&type, &time, &reqNbr, &transactionId,
+    rx_ret = base_cfdp_get_event(&type, &time, &reqNbr, &transactionId,
 				sourceFileNameBuf, destFileNameBuf,
 				&fileSize, &messagesToUser, &offset, &length,
 				&recordBoundsRespected, &continuationState,
@@ -545,21 +543,21 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpTransactionInd
     if (type == CfdpTransactionInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K})", (int)CfdpTransactionInd, 
                                            "transaction_id", (unsigned long long)transaction_id);
     }
 
     // Handle CfdpEofSentInd
     if (type == CfdpEofSentInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K})", (int)CfdpEofSentInd, 
                                            "transaction_id", (unsigned long long)transaction_id);
     }
 
     // Handle CfdpEofRecvInd
     if (type == CfdpEofRecvInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K})", (int)CfdpEofRecvInd, 
                                            "transaction_id", (unsigned long long)transaction_id);
     }
@@ -576,7 +574,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpReportInd
     if (type == CfdpReportInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K, s:i})", (int)CfdpReportInd, "transaction_id",
                                                 (unsigned long long)transaction_id,
                                                 "status", (int)fileStatus);
@@ -585,7 +583,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpFaultInd
     if (type == CfdpFaultInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K, s:i, s:K})", (int)CfdpFaultInd, "transaction_id",
                                                      (unsigned long long)transaction_id,
                                                      "code", (int)deliveryCode,
@@ -594,7 +592,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpAbandonedInd
     if (type == CfdpAbandonedInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K, s:i, s:K})", (int)CfdpAbandonedInd, "transaction_id",
                                                      (unsigned long long)transaction_id,
                                                      "code", (int)deliveryCode,
@@ -603,7 +601,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpFileSegmentRecvInd
     if (type == CfdpFileSegmentRecvInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
         return Py_BuildValue("(i, {s:K, s:K, s:I})", (int)CfdpFileSegmentRecvInd,
                                                "transaction_id", (unsigned long long)transaction_id,
                                                "offset", (unsigned long long)offset,
@@ -616,13 +614,13 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpMetadataRecvInd
     if (type == CfdpMetadataRecvInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
-        cfdp_decompress_number(&source_entity_nbr, &(originatingTransactionId.sourceEntityNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&source_entity_nbr, &(originatingTransactionId.sourceEntityNbr));
 
         // Get all messages
         while (messagesToUser) {
             // Get next message
-            if (cfdp_get_usrmsg(&messagesToUser, usrmsgBuf, (int *)&length) < 0) {
+            if (base_cfdp_get_usrmsg(&messagesToUser, usrmsgBuf, (int *)&length) < 0) {
                 sprintf(err_msg, "Failed getting user messages, check ion.log.");                     
                 PyErr_SetString(PyExc_RuntimeError, err_msg);
                 return NULL;
@@ -659,12 +657,12 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
     // Handle CfdpTransactionFinishedInd
     if (type == CfdpTransactionFinishedInd) {
-        cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
+        base_cfdp_decompress_number(&transaction_id, &(transactionId.transactionNbr));
 
         // Get all filestore responses
         while (filestoreResponses) {
             // Get next response
-            if (cfdp_get_fsresp(&filestoreResponses, &action, &status, firstPathName, 
+            if (base_cfdp_get_fsresp(&filestoreResponses, &action, &status, firstPathName, 
                                 secondPathName, msgBuf) < 0) {
                 sprintf(err_msg, "Failed getting FS response, check ion.log.");                     
                 PyErr_SetString(PyExc_RuntimeError, err_msg);
@@ -698,7 +696,7 @@ static PyObject *pyion_cfdp_next_events(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_cfdp_interrupt_events(PyObject *self, PyObject *args) {   
     // Interrupt CFDP event handler
-    cfdp_interrupt();
+    base_cfdp_interrupt();
 
     // Return None to indicate success
     Py_RETURN_NONE;

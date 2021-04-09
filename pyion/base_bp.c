@@ -219,6 +219,9 @@ int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctr
     } else {
         ok = bp_open_source(ownEid, &(state->sap), 1);
     }
+    if (ok < 0) {
+        return PYION_IO_ERR;
+    }
 
         // Mark the SAP state for this endpoint as running
     state->status   = EID_IDLE;
@@ -236,7 +239,7 @@ int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctr
         state->attendant = NULL;
     }
 
-return 0;
+return ok;
 
 
 }

@@ -176,7 +176,7 @@ int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
     sdr = getIonsdr();
 
     // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return NULL;
+    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
     data_size = zco_source_data_length(sdr, data);
     sdr_exit_xn(sdr);
 
