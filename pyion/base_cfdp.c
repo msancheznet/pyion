@@ -112,7 +112,7 @@ int base_cfdp_get(CfdpReqParms *params, CfdpProxyTask *task)
 
 int base_cfdp_cancel(CfdpReqParms *params)
 {
-    return cfdp_cancel(params);
+    return cfdp_cancel(&(params->transactionId));
 }
 
 int base_cfdp_suspend(CfdpReqParms *params)
