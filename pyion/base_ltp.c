@@ -4,6 +4,7 @@
 #include "return_codes.h"
 #include "_utils.c"
 
+#include "macros.h"
 
 
 int base_ltp_attach(void) {
@@ -57,7 +58,7 @@ int base_ltp_send(LtpSAP *state, LtpTxPayload *msg) {
     sdr = getIonsdr();
 
     // Start SDR transaction
-    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    SDR_BEGIN_XN
 
     // Allocate SDR memory
     extent = sdr_insert(sdr, msg->data, (size_t)msg->data_size);
@@ -69,7 +70,7 @@ int base_ltp_send(LtpSAP *state, LtpTxPayload *msg) {
     }
 
     // End SDR transaction
-    if (!sdr_pyend_xn(sdr)) return PYION_SDR_ERR;
+    SDR_END_XN
 
     // Create ZCO object (not blocking because there is no attendant)
     item = ionCreateZco(ZcoSdrSource, extent, 0, msg->data_size,
@@ -176,9 +177,9 @@ int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
     sdr = getIonsdr();
 
     // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    SDR_BEGIN_XN
     data_size = zco_source_data_length(sdr, data);
-    sdr_exit_xn(sdr);
+    SDR_END_XN
 
     // Check if we need to allocate memory dynamically
     do_malloc = 1;
@@ -190,9 +191,9 @@ int base_ltp_receive_data(LtpSAP *state, LtpRxPayload *payloadObj){
     zco_start_receiving(data, &reader);
 
     // Get bundle data
-    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    SDR_BEGIN_XN
     payloadObj->len = zco_receive_source(sdr, &reader, data_size, payloadObj->payload);
-    if (!sdr_pyend_xn(sdr)) return PYION_SDR_ERR;
+    SDR_END_XN
 
 
     // Handle error while getting the payload

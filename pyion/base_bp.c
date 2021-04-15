@@ -11,6 +11,7 @@
 #include "return_codes.h"
 #include "base_bp.h"
 #include "_utils.c"
+#include "macros.h"
 
 
 
@@ -96,6 +97,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     int data_size, len, rx_ret, do_malloc;
     Sdr sdr;
     ZcoReader reader;
+    char err_msg[150];
 
     // Define variables to store the bundle payload. If payload size is less than
     // MAX_PREALLOC_BUFFER, then use preallocated buffer to save time. Otherwise,
@@ -148,9 +150,9 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     }
 
     // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    SDR_BEGIN_XN
     data_size = zco_source_data_length(sdr, dlv->adu);
-    sdr_pyexit_xn(sdr);
+    SDR_END_XN
 
     // Check if we need to allocate memory dynamically
     do_malloc = (data_size > MAX_PREALLOC_BUFFER);
@@ -162,7 +164,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     zco_start_receiving(dlv->adu, &reader);
 
     // Get bundle data
-    if (!sdr_pybegin_xn(sdr)) return PYION_SDR_ERR;
+    SDR_BEGIN_XN
     len = zco_receive_source(sdr, &reader, data_size, payload);
 
     msg->payload = payload;
@@ -257,7 +259,7 @@ return ok;
            bundleZco, &newBundle*/
 int base_bp_send(BpSapState *state, BpTx *txInfo)
 {
-
+    char err_msg[150];
     Object newBundle;
     Sdr sdr = NULL;
     Object bundleZco;
@@ -270,11 +272,9 @@ int base_bp_send(BpSapState *state, BpTx *txInfo)
     //printf("THIS IS SOMETHING THAT I ADDED!");
 
     // Insert data to SDR
-    if (!sdr_pybegin_xn(sdr))
-        return PYION_SDR_ERR;
+    SDR_BEGIN_XN
     bundleSdr = sdr_insert(sdr, txInfo->data, (size_t)txInfo->data_size);
-    if (!sdr_pyend_xn(sdr))
-        return PYION_SDR_ERR;
+    SDR_END_XN
 
     // If insert failed, cancel transaction and exit
     //sdr_end_xn(sdr);
