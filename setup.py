@@ -191,7 +191,8 @@ _mem = Extension('_mem',
                 include_dirs=[str(ion_inc)],
                 libraries=['ici', 'bp', 'cfdp', 'ltp'],        # bp is required
                 library_dirs=[str(ion_lib)],
-                sources=['./pyion/_mem.c'
+                sources=['./pyion/_mem.c',
+                './pyion/base_mem.c'
                 ],
                 extra_compile_args=compile_args
                 )

@@ -8,16 +8,10 @@
  * U.S. Government sponsorship acknowledged.
  * =========================================================================== */
 
-#include <platform.h>
-#include <sdr.h>
-#include <ion.h>
-#include <zco.h>
-#include <sdrxn.h>
-#include <psm.h>
-#include <memmgr.h>
 #include <Python.h>
 
 #include "_utils.c"
+#include "base_mem.h"
 
 /* ============================================================================
  * === _mem module definitions
@@ -94,7 +88,7 @@ static PyObject *pyion_sdr_dump(PyObject *self, PyObject *args) {
     // Get the state of the SDR
     // NOTE: sdr_usage needs to be in a transaction even though it is a read operation
     if (!sdr_pybegin_xn(sdr)) return NULL;     
-    sdr_usage(sdr, &sdrUsage);
+    base_sdr_usage(sdr, &sdrUsage);
     sdr_pyexit_xn(sdr);
 
     // Get amount of data available in small pool [bytes]
@@ -164,7 +158,7 @@ static PyObject *pyion_psm_dump(PyObject *self, PyObject *args) {
     }
 
     // Get the state of the PSM
-    psm_usage(psm, &psmUsage);
+    base_psm_usage(psm, &psmUsage);
 
     // Get amount of data available in small pool [bytes]
     size_t sp_avail = psmUsage.smallPoolFree;
