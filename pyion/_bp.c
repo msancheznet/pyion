@@ -51,6 +51,7 @@
 #include <Python.h>
 
 #include "_utils.c"
+#include "base_bp.h"
 
 /* ============================================================================
  * === _bp module definitions
@@ -173,23 +174,6 @@ PyMODINIT_FUNC PyInit__bp(void) {
  * === Define structures for this module
  * ============================================================================ */
 
-// Possible states of an enpoint. This is used to avoid race conditions
-// when closing receiving threads.
-typedef enum {
-    EID_IDLE = 0,
-    EID_RUNNING,
-    EID_CLOSING,
-    EID_INTERRUPTING
-} SapStateEnum;
-
-// A combination of a BpSAP object and a representation of its status.
-// The status only used during reception for now.
-typedef struct {
-    BpSAP sap;
-    SapStateEnum status;
-    int detained;
-    ReqAttendant* attendant;
-} BpSapState;
 
 /* ============================================================================
  * === Define global variables
@@ -199,11 +183,15 @@ typedef struct {
 
 /* ============================================================================
  * === Attach/Detach Functions
- * ============================================================================ */
+ * =================================s=========================================== */
 
 static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
     // Try to attach to BP agent
-    if (bp_attach() < 0) {
+    int oK;
+Py_BEGIN_ALLOW_THREADS;                                
+ oK =base_bp_attach();
+ Py_END_ALLOW_THREADS   
+    if (oK < 0) {
         pyion_SetExc(PyExc_SystemError, "Cannot attach to BP engine. Is ION running on this host?");
         return NULL;
     }
@@ -214,8 +202,14 @@ static PyObject *pyion_bp_attach(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
     // Detach from BP agent
-    bp_detach();
-
+    //Consider GIL situation
+    
+    Py_BEGIN_ALLOW_THREADS           
+     //bp_detach is a void function. If it fails, then something
+     //serious is happening and will kill the process as necessary.                     
+    base_bp_detach();
+    Py_END_ALLOW_THREADS
+    
     // Return True to indicate success
     Py_RETURN_TRUE;
 }
@@ -225,75 +219,52 @@ static PyObject *pyion_bp_detach(PyObject *self, PyObject *args) {
  * ============================================================================ */
 
 static PyObject *pyion_bp_open(PyObject *self, PyObject *args) {
-    // Define variables
-    char *ownEid;
-    int detained, ok, mem_ctrl;
 
+    //state object, we will be returning a form of this
+    BpSapState *state = NULL;
+    int ok;
+    char *ownEid;
+    int detained, mem_ctrl;
+
+     // Parse the input tuple. Raises error automatically if not possible
+    if (!PyArg_ParseTuple(args, "sii", &ownEid, &detained, &mem_ctrl))
+        return NULL;
+    
+  
+
+    ok = base_bp_open(&state, ownEid, detained, mem_ctrl);
     // Allocate memory for state and initialize to zeros
-    BpSapState *state = (BpSapState*)malloc(sizeof(BpSapState));
-    if (state == NULL) {
+    if (ok == -1) {
         pyion_SetExc(PyExc_RuntimeError, "Cannot malloc for BP state.");
         return NULL;
     }
 
     // Set memory contents to zeros
-    memset((char *)state, 0, sizeof(BpSapState));
 
-    // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "sii", &ownEid, &detained, &mem_ctrl))
-        return NULL;
-    
-    // Open the endpoint. This call fills out the SAP information
-    // NOTE: An endpoint must be opened in detained mode if you want
-    //       to have custody-based re-tx.
-    if (detained == 0) {
-        ok = bp_open(ownEid, &(state->sap));
-    } else {
-        ok = bp_open_source(ownEid, &(state->sap), 1);
-    }
+   
 
     // Handle error while opening endpoint
-    if (ok < 0) {
+    if (ok == -2) {
         pyion_SetExc(PyExc_ConnectionError, "Cannot open endpoint '%s'. Is it defined in .bprc? Is it already in use?", ownEid);
         return NULL;
     }
 
-    // Mark the SAP state for this endpoint as running
-    state->status   = EID_IDLE;
-    state->detained = (detained > 0);
+    if (ok == -3) {
+    pyion_SetExc(PyExc_RuntimeError, "Can't initialize memory attendant.");
+            return NULL;
+    }
+    
+
 
     // If you need ZCO memory control, create an attendant
-    if (mem_ctrl) {
-        // Allocate memory for new attendant
-        state->attendant = (ReqAttendant*)malloc(sizeof(ReqAttendant));
-        
-        // Initialize the attendant
-        if (ionStartAttendant(state->attendant)) {
-            pyion_SetExc(PyExc_RuntimeError, "Can't initialize memory attendant.");
-            return NULL;
-        }
-    } else {
-        state->attendant = NULL;
-    }
+    
 
     // Return the memory address of the SAP for this endpoint as an unsined long
     PyObject *ret = Py_BuildValue("k", state);
     return ret;
 }
 
-static void close_endpoint(BpSapState *state) {
-    // Close and free attendant
-    if (state->attendant) {
-        ionStopAttendant(state->attendant);
-        free(state->attendant);
-    } 
 
-    // Close this SAP
-    bp_close(state->sap);
-
-    // Free state memory
-    free(state);
-}
 
 static PyObject *pyion_bp_close(PyObject *self, PyObject *args) {
     // Define variables
@@ -305,7 +276,7 @@ static PyObject *pyion_bp_close(PyObject *self, PyObject *args) {
 
     // If endpoint is in idle state, just close
     if (state->status == EID_IDLE) {
-        close_endpoint(state);
+        base_close_endpoint(state);
         Py_RETURN_NONE;
     }
 
@@ -335,10 +306,9 @@ static PyObject *pyion_bp_interrupt(PyObject *self, PyObject *args) {
 
     // Mark that you have transitioned to interruping state
     state->status = EID_INTERRUPTING;
-    bp_interrupt(state->sap);
+    base_bp_interrupt(state);
 
-    // Pause the attendant
-    if (state->attendant) ionPauseAttendant(state->attendant);
+   
 
     Py_RETURN_NONE;
 }
@@ -349,192 +319,86 @@ static PyObject *pyion_bp_interrupt(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_bp_send(PyObject *self, PyObject *args) {
     // Define variables
-    char *destEid = NULL;
-    char *reportEid = NULL;
+
     Sdr sdr = NULL;
-    const char *data = NULL;
     int data_size;
-    Object bundleSdr;
-    Object bundleZco;
-    Object newBundle;
+    char *data;
+    char *reportEid, *destEid;
     int ok, ttl, classOfService, rrFlags, ackReq;
     unsigned int retxTimer;
     BpCustodySwitch custodySwitch;
     BpAncillaryData *ancillaryData = NULL;
     BpSapState *state = NULL;
+    BpTx txInfo;
+
+    base_init_bp_tx_payload(&txInfo);
+
+    int status; //return status of bp_send
+
 
     // Parse input arguments. First one is SAP memory address for this endpoint
     if (!PyArg_ParseTuple(args, "ksziiiiiIs#", (unsigned long *)&state, &destEid, &reportEid, &ttl,
                           &classOfService, (int *)&custodySwitch, &rrFlags, &ackReq, &retxTimer,
                           &data, &data_size))
         return NULL;
+ 
+    // Create TxPayload struct
+    txInfo.destEid = destEid;
+    txInfo.reportEid = reportEid;
+    txInfo.ttl = ttl;
+    txInfo.classOfService = classOfService;
+    txInfo.custodySwitch = custodySwitch;
+    txInfo.rrFlags = rrFlags;
+    txInfo.ackReq = ackReq;
+    txInfo.retxTimer = retxTimer;
+    txInfo.data = data;
+    txInfo.data_size = data_size;
+    txInfo.ancillaryData = ancillaryData;
 
-    // Initialize variables
-    sdr = bp_get_sdr();
-
-    // Insert data to SDR
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    bundleSdr = sdr_insert(sdr, data, (size_t)data_size);
-    if (!sdr_pyend_xn(sdr)) return NULL;
-
-    // If insert failed, cancel transaction and exit
-    if (!bundleSdr) {
-        pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
-        return NULL;
-    }
-
-    // NOTE 1: Create the ZCO object. If not enough ZCO space, and the attendant is not NULL, then
-    // this is a blocking call. Therefore, release the GIL.
-    // NOTE 2: Since this is blocking call, you cannot be in an SDR transaction. Otherwise you will
-    // have a three-way deadlock.
+    // Release the GIL
+     
     Py_BEGIN_ALLOW_THREADS                                
-    bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, data_size,
-                             classOfService, 0, ZcoOutbound, state->attendant);                                        
+           status = base_bp_send(state, &txInfo);                        
     Py_END_ALLOW_THREADS
 
-    // Handle error while creating ZCO object
-    if (!bundleZco || bundleZco == (Object)ERROR) {
-        pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
-        return NULL;
-    }
+    base_stack_destroy_bp_tx_payload(&txInfo);
 
-    // Send ZCO object using BP protocol.    
-    // NOTE: bp_send starts SDR transactions internally, so it might block.
-    Py_BEGIN_ALLOW_THREADS                        
-    ok = bp_send(state->sap, destEid, reportEid, ttl, classOfService, custodySwitch,
-                 rrFlags, ackReq, ancillaryData, bundleZco, &newBundle);
-    Py_END_ALLOW_THREADS
-
-    // Handle error in bp_send
-    if (ok <= 0) {
-        pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", ok);
-        return NULL;
-    }
-
-    // If you want custody transfer and have specified a re-transmission timer,
-    // then activate it
-    if (custodySwitch == SourceCustodyRequired && retxTimer > 0) {
-        // Note: The timer starts as soon as bp_memo is called.
-        ok = bp_memo(newBundle, retxTimer);
-
-        // Handle error in bp_memo
-        if (ok < 0) {
-            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", ok);
+    switch(status) {
+        case 0: 
+            // Return True to indicate success
+            Py_RETURN_TRUE;
+            break;
+        case PYION_SDR_ERR: 
+             pyion_SetExc(PyExc_MemoryError, "SDR memory could not be allocated.");
             return NULL;
-        }
+        case PYION_IO_ERR:
+          pyion_SetExc(PyExc_MemoryError, "ZCO object creation failed.");
+          return NULL;
+        case 3:
+            pyion_SetExc(PyExc_RuntimeError, "Error while scheduling custodial retransmission (err code=%i).", 3);
+            return NULL;
+        default:
+            pyion_SetExc(PyExc_RuntimeError, "Error while sending the bundle (err code=%i).", status);
+            return NULL;
+        
     }
 
-    // If you have opened this endpoint in detained mode, you need to release the bundle
-    if (state->detained) bp_release(newBundle);
-
-    // Return True to indicate success
-    Py_RETURN_TRUE;
 }
 
 /* ============================================================================
  * === Receive Functionality
  * ============================================================================ */
 
-static PyObject *receive_data(BpSapState *state, BpDelivery *dlv){
-    // Define variables
-    int data_size, len, rx_ret, do_malloc;
-    Sdr sdr;
-    ZcoReader reader;
-
-    // Define variables to store the bundle payload. If payload size is less than
-    // MAX_PREALLOC_BUFFER, then use preallocated buffer to save time. Otherwise,
-    // call malloc to allocate as much memory as you need.
-    char prealloc_payload[MAX_PREALLOC_BUFFER];
-    char *payload;
-
-    // Get ION's SDR
-    sdr = bp_get_sdr();
-
-    while (state->status == EID_RUNNING) {
-        // Receive the next bundle. This is a blocking call. Therefore, release the GIL
-        Py_BEGIN_ALLOW_THREADS                                // Release the GIL
-        rx_ret = bp_receive(state->sap, dlv, BP_BLOCKING);
-        Py_END_ALLOW_THREADS                                  // Acquire the GIL
-
-        // Check if error while receiving a bundle
-        if ((rx_ret < 0) && (state->status == EID_RUNNING)) {
-            pyion_SetExc(PyExc_IOError, "Error receiving bundle through endpoint (err code=%d).", rx_ret);
-            return NULL;
-        }
-
-        // If dlv is not interrupted (e.g., it was successful), get out of loop.
-        // From Scott Burleigh: BpReceptionInterrupted can happen because SO triggers an
-        // interruption without the user doing anything. Therefore, bp_receive always
-        // needs to be enclosed in this type of while loops.
-        if (dlv->result != BpReceptionInterrupted)
-            break;
-    }
-
-    // If you exited because of interruption
-    if (state->status == EID_INTERRUPTING) {
-        pyion_SetExc(PyExc_InterruptedError, "BP reception interrupted.");
-        return NULL;
-    }
-
-    // If you exited because of closing
-    if (state->status == EID_CLOSING) {
-        pyion_SetExc(PyExc_ConnectionAbortedError, "BP reception closed.");
-        return NULL;
-    }
-
-    // If endpoint was stopped, finish
-    if (dlv->result == BpEndpointStopped) {
-        pyion_SetExc(PyExc_ConnectionAbortedError, "BP endpoint was stopped.");
-        return NULL;
-    }
-
-    // If bundle does not have the payload, raise IOError
-    if (dlv->result != BpPayloadPresent) {
-        pyion_SetExc(PyExc_IOError, "Bundle received without payload.");
-        return NULL;
-    }
-
-    // Get content data size
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    data_size = zco_source_data_length(sdr, dlv->adu);
-    sdr_pyexit_xn(sdr);
-
-    // Check if we need to allocate memory dynamically
-    do_malloc = (data_size > MAX_PREALLOC_BUFFER);
-
-    // Allocate memory if necessary
-    payload = do_malloc ? (char *)malloc(data_size) : prealloc_payload;
-
-    // Initialize reader
-    zco_start_receiving(dlv->adu, &reader);
-
-    // Get bundle data
-    if (!sdr_pybegin_xn(sdr)) return NULL;
-    len = zco_receive_source(sdr, &reader, data_size, payload);
-
-    // Handle error while getting the payload
-    if (sdr_end_xn(sdr) < 0 || len < 0) {
-        pyion_SetExc(PyExc_IOError, "Error extracting payload from bundle.");
-
-        // Clean up tasks
-        if (do_malloc) free(payload);
-        return NULL;
-    }
-
-    // Build return object
-    PyObject *ret = Py_BuildValue("y#", payload, len);
-
-    // If you allocated memory for this payload, free it here
-    if (do_malloc) free(payload);
-
-    return ret;
-}
 
 static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     // Define variables
     BpSapState *state;
     PyObject *ret;
-    BpDelivery dlv;
+
+    int status;
+    BpRx msg;
+    msg.payload = msg.payload_prealloc;
+ 
 
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
@@ -543,18 +407,33 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args) {
     // Mark as running
     state->status = EID_RUNNING;
 
-    // Trigger reception of data
-    ret = receive_data(state, &dlv);
+    Py_BEGIN_ALLOW_THREADS                                // Release the GIL
+    status = base_bp_receive_data(state, &msg);
+    Py_END_ALLOW_THREADS
 
-    // Clean up tasks
-    bp_release_delivery(&dlv, 1);
-
-    // Close if necessary. Otherwise set to IDLE
-    if (state->status == EID_CLOSING) {
-        close_endpoint(state);
-    } else {
-        state->status = EID_IDLE;
+    if (status) { //there was an error, free our memory to prevent a leak.
+            if (msg.do_malloc) free(msg.payload);
     }
+    switch (status) {
+        case PYION_INTERRUPTED_ERR:
+             pyion_SetExc(PyExc_ConnectionError, "ION Connection Interrupted");
+             return NULL;
+        case PYION_CONN_ABORTED_ERR:
+             pyion_SetExc(PyExc_ConnectionError, "ION Connection aborted error.");
+             return NULL;
+        case PYION_IO_ERR:
+            pyion_SetExc(PyExc_IOError, "ION IO Error");
+            return NULL;
+        case PYION_SDR_ERR:
+            pyion_SetExc(PyExc_MemoryError, "SDR Failure");
+            return NULL;
+    }
+
+    // Build return object
+    ret = Py_BuildValue("y#", msg.payload, msg.len);
+
+    // If you allocated memory for this payload, free it here
+    if (msg.do_malloc) free(msg.payload);
 
     // Return value
     return ret;
