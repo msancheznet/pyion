@@ -62,8 +62,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-4.0.0'
-__release__ = 'R2020a'
+__version__ = 'pyion-4.1.0'
+__release__ = 'R2021a'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -199,7 +199,7 @@ _mem = Extension('_mem',
 
 # Define the extensions to compile
 _ext_modules = [_bp, _cfdp, _ltp, _mem]
-if ion_path: _ext_modules.append(_admin)
+#if ion_path: _ext_modules.append(_admin)
 
 # ========================================================================================
 # === Main setup
