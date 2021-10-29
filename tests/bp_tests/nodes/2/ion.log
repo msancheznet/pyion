@@ -1,0 +1,15 @@
+[2021/10/29-22:26:27] [i] rfxclock is running.
+[2021/10/29-22:26:27] [i] No congestion forecast; horizon reached.
+[2021/10/29-22:26:27] [i] ionwarn finished.
+[2021/10/29-22:26:27] [i] This node deploys bundle protocol version 7.
+[2021/10/29-22:26:27] [?] Can't find ION security database.
+[2021/10/29-22:26:27] [?] Warning: running without bundle security.
+[2021/10/29-22:26:27] [i] bpclm is running: ipn:1.0
+[2021/10/29-22:26:28] [i] bprecvfile is running.
+[2021/10/29-22:26:28] [i] ipnfw is running.
+[2021/10/29-22:26:28] [i] Not configured for multicast; cpsd stopping.
+[2021/10/29-22:26:28] [i] ipnadminep is running.
+[2021/10/29-22:26:28] [i] bptransit is running.
+[2021/10/29-22:26:28] [i] bpclock is running.
+[2021/10/29-22:26:28] [i] udpcli is running, spec=[196.128.0.102:4602].
+[2021/10/29-22:26:28] [i] udpclo is running, spec = '196.128.0.101:4601'

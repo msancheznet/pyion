@@ -1,0 +1,28 @@
+[i] admin pgm using SDR parm overrides from node.ionconfig.
+wmKey:           65281
+wmSize:          50000000
+wmAddress:       0
+sdrName:        'ion'
+sdrWmSize:       0
+configFlags:     1
+heapWords:       500000
+heapKey:         -1
+logSize:         0
+logKey:          -1
+pathName:       '/tmp'
+Stopping ionadmin.
+Now checking ion
+: ION system is started
+Stopping ionadmin.
+Now checking bp
+: Syntax error at line 1108 of ionadmin.c
+Region nbr can't be zero.
+Stopping ionadmin.
+Stopping ionsecadmin.
+Stopping ipnadmin.
+Stopping bpadmin.
+BP agent is started
+Stopping bpadmin.
+
+ION system started script completed.
+bcbcbcbcbcbcbcbcbcbcbcbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbbbbbcccccccccbcbbbbbbbbbcccccccccbbbbbbbbbcccccccccbcccccbcccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
