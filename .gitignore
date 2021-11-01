@@ -7,19 +7,9 @@ pyion.egg-info
 
 *.pyc
 
-tests/ltp_tests/nodes
-tests/ltp_tests/nodes/1/ionstart
-tests/ltp_tests/nodes/1/ionstop
-tests/ltp_tests/nodes/1/ionstop
-tests/ltp_tests/nodes/1/node.stdout
-tests/ltp_tests/nodes/2/ionstart
-tests/ltp_tests/nodes/2/ionstop
-tests/ltp_tests/nodes/2/node.stdout
-tests/ltp_tests/nodes/2/node.stdout
-tests/ltp_tests/nodes/2/ionstop
-tests/ltp_tests/nodes/1/ionstart
-tests/ltp_tests/nodes/1/ionstop
-tests/ltp_tests/nodes/2/ionstart
-tests/ltp_tests/nodes/2/ionstop
-tests/ltp_tests/nodes/1/ionstart
-tests/ltp_tests/nodes/1/ionstop
+tests/bp_tests/*
+tests/ltp_tests/*
+tests/cfdp_tests/*
+tests/mem_tests/*
+tests/admin_tests/*
+tests/image_app/*
