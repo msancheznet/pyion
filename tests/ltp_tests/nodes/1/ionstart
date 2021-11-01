@@ -5,7 +5,7 @@ ionadmin	contact_plan.ionrc &
 sleep 0.1
 ionsecadmin	node.ionsecrc &
 sleep 0.1
+bpadmin		node.bprc &
+sleep 0.1
 ltpadmin	node.ltprc & 
 sleep 0.1
-bpadmin		node.bprc &
-

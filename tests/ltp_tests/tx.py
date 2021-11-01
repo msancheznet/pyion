@@ -47,9 +47,6 @@ data  = np.random.choice(chars, size=(data_size,)).astype('|S1').tostring()
 # Create a proxy to LTP
 pxy = pyion.get_ltp_proxy(node_nbr)
 
-# Attach to ION's LTP engine
-pxy.ltp_attach()
-
 # Open a endpoint access point for this client and send data
 with pxy.ltp_open(client_id) as sap:
     print('Sending', data)

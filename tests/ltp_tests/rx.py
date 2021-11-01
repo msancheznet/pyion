@@ -37,9 +37,6 @@ client_id = 4
 # Create a proxies to ION
 pxy = pyion.get_ltp_proxy(node_nbr)
 
-# Attach to ION's BP and CFDP
-pxy.ltp_attach()
-
 # Open a service access point and receive data
 with pxy.ltp_open(client_id) as sap:
     # You are now ready to received

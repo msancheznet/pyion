@@ -12,10 +12,10 @@ logKey:          -1
 pathName:       '/usr/ion'
 [?] No such directory; disabling heap residence in file and transaction reversibility: /usr/ion
 Stopping ionadmin.
-Stopping ionadmin.
 Stopping ionsecadmin.
+Stopping ionadmin.
 Stopping ltpadmin.
 Stopping ipnadmin.
 Stopping bpadmin.
 sssNOTE: udplso now gets transmission data rate from the contact plan.  txbps is still accepted on the command line, for backward compatibility, but it is ignored.
-gts
+gtssssgts

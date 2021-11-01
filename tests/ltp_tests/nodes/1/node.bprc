@@ -15,7 +15,7 @@ a endpoint ipn:1.1 x
 a endpoint ipn:1.2 x
 
 # CFDP requires it  
-a endpoint ipn:1.64  
+a endpoint ipn:1.64 x
 a endpoint ipn:1.65 x
 
 # Default port where bpecho is listening

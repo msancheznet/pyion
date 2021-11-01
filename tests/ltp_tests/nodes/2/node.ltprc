@@ -1,12 +1,12 @@
 1 300
 
 # Connection to node 1
-a span 1 2 2 1200 100100 1 'udplso 196.127.0.101:3001 230000'
+a span 1 2 2 1200 100100 1 'udplso 196.128.0.101:3001 230000'
 
 # Loopback
-a span 2 2 2 1200 100100 1 'udplso 196.127.0.102:3001 230000'
+a span 2 2 2 1200 100100 1 'udplso 196.128.0.102:3001 230000'
 
 w 1
 
 # One input for all incoming connections
-s 'udplsi 196.127.0.102:3001'
+s 'udplsi 196.128.0.102:3001'
