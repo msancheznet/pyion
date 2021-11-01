@@ -39,9 +39,6 @@ EID = 'ipn:2.1'
 # Create a proxy to ION's BP
 proxy = pyion.get_bp_proxy(node_nbr)
 
-# Attach to ION
-proxy.bp_attach()
-
 # Open a proxy to receive data
 with proxy.bp_open(EID) as eid:
     # You are now ready to received
