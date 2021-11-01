@@ -31,7 +31,7 @@ from pyion import CfdpEventEnum, CfdpFileStoreEnum
 # =================================================================
 
 # Define file to send
-file = './nodes/1/data/test_file.pptx'
+file = './nodes/1/data/cfdp_test_file.txt'
 
 # ION node numbers
 node_nbr = 1
@@ -93,10 +93,6 @@ def cfdp_event_handler(ev_type, ev_params):
 # Create a proxies to ION
 bpxy = pyion.get_bp_proxy(node_nbr)
 cpxy = pyion.get_cfdp_proxy(node_nbr)
-
-# Attach to ION's BP and CFDP
-bpxy.bp_attach()
-cpxy.cfdp_attach()
 
 # Open a endpoint and set its properties.
 ept = bpxy.bp_open(orig_eid, **ept_props)

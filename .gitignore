@@ -7,7 +7,6 @@ pyion.egg-info
 
 *.pyc
 
-tests/cfdp_tests/*
 tests/mem_tests/*
 tests/admin_tests/*
 tests/image_app/*
@@ -27,4 +26,13 @@ tests/ltp_tests/nodes/1/node.stdout/data/*
 tests/ltp_tests/nodes/2/ion.log
 tests/ltp_tests/nodes/2/node.stdout
 tests/ltp_tests/nodes/2/node.stdout/data/*
+
+tests/cfdp_tests/nodes/ion_nodes
+tests/cfdp_tests/nodes/1/ion.log
+tests/cfdp_tests/nodes/1/node.stdout
+tests/cfdp_tests/nodes/1/node.stdout/data/*
+tests/cfdp_tests/nodes/2/ion.log
+tests/cfdp_tests/nodes/2/node.stdout
+tests/cfdp_tests/nodes/2/node.stdout/data/*
+
 
