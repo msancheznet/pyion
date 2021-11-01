@@ -30,6 +30,10 @@ function startNode() {
     
     # Go to this node's folder
     cd "nodes/$1"
+	
+	# Clear files
+	rm ion.log
+	rm node.stdout
 
     # Touch the file to avoid error
     touch node.stdout
