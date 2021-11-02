@@ -44,9 +44,6 @@ ept_props = {
 # Create a proxy to ION's BP
 proxy = pyion.get_bp_proxy(node_nbr)
 
-# Attach to ION
-proxy.bp_attach()
-
 def receive_data():
     # Open a proxy to receive data
     with proxy.bp_open(EID, **ept_props) as eid:

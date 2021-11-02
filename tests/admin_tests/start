@@ -30,9 +30,20 @@ function startNode() {
     
     # Go to this node's folder
     cd "nodes/$1"
-
+	
+	# Clear files
+	if [ -f "ion.log" ]
+	then
+		rm ion.log
+	fi
+	if [ -f "node.stdout" ]
+	then
+		rm node.stdout
+	fi
+	
     # Touch the file to avoid error
     touch node.stdout
+	touch ion.log
 
     # Ensure that scripts are executable
     chmod +x ionstart
@@ -72,18 +83,21 @@ function startNode() {
 # If no parameters where passed, then look at the folder within ./nodes.
 # There needs to be one folder per node.
 if [ $# -eq 0 ]
-    then
-        ./cleanup
-        echo "Starting all ION nodes..."  
-        folders=$(ls -l nodes | egrep ^d | awk -F" " '{print $9}')
-    else
-        folders=$@    
-    fi
+then
+	# Clean all ION processes
+	./cleanup
+
+	# Get all folders with ION nodes
+	folders=$(ls -l nodes | egrep ^d | awk -F" " '{print $9}')
+else
+	folders=$@    
+fi
 
 # Initialize variables
 i=0
 
 # Start the node defined in each folder.
+echo "Starting all ION nodes..."  
 for folder in $folders
     do
         startNode $folder &        

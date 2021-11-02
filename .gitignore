@@ -2,12 +2,8 @@ build
 dist
 .vscode
 pyion.egg-info
-
 *.so
-
 *.pyc
-
-tests/admin_tests/*
 
 tests/bp_tests/nodes/ion_nodes
 tests/bp_tests/nodes/1/ion.log
@@ -40,4 +36,12 @@ tests/mem_tests/nodes/1/node.stdout/data/*
 tests/mem_tests/nodes/2/ion.log
 tests/mem_tests/nodes/2/node.stdout
 tests/mem_tests/nodes/2/node.stdout/data/*
+
+tests/admin_tests/nodes/ion_nodes
+tests/admin_tests/nodes/1/ion.log
+tests/admin_tests/nodes/1/node.stdout
+tests/admin_tests/nodes/1/node.stdout/data/*
+tests/admin_tests/nodes/2/ion.log
+tests/admin_tests/nodes/2/node.stdout
+tests/admin_tests/nodes/2/node.stdout/data/*
 
