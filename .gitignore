@@ -8,7 +8,6 @@ pyion.egg-info
 *.pyc
 
 tests/admin_tests/*
-tests/image_app/*
 
 tests/bp_tests/nodes/ion_nodes
 tests/bp_tests/nodes/1/ion.log
