@@ -20,7 +20,7 @@ from warnings import warn
 # Module imports
 import pyion
 import pyion.utils as utils
-from pyion.constants import BpEcsEnumeration
+from pyion.constants import BpEcsEnumeration, BpCustodyEnum
 
 # Import C Extension
 import _bp
@@ -122,6 +122,10 @@ class Endpoint():
 		# If this endpoint is not detained, you cannot use a retx_timer
 		if retx_timer>0 and not self.detained:
 			raise ConnectionError('This endpoint is not detained. You cannot set up custodial timers.')
+
+		# In pyion v4.0.0 and beyond, BPv7 is assumed. Therefore, custody transfer is not allowed
+		if custody != BpCustodyEnum.NO_CUSTODY_REQUESTED:
+			raise ValueError('Custody transfer is not allowed in pyion-4.0.0+ since it is not in BPv7')
 
 		# Create call arguments
 		args = (dest_eid, data, TTL, priority, report_eid, custody, report_flags,
