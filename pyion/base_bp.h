@@ -43,8 +43,7 @@ typedef struct
     int len;
     int do_malloc;
     char payload_prealloc[MAX_PREALLOC_BUFFER];
-    char *payload; //payload should be initialized to point to payload_prealloc.
-    //If we must malloc, remember to set do_malloc to 1
+    char *payload; // If we must malloc, remember to set do_malloc to 1         
 } BpRx;
 
 /**
@@ -102,18 +101,10 @@ int base_bp_open(BpSapState **state, char *ownEid, int detained, int mem_ctrl);
  * Helper "constructor" functions for BpTx and BpRx objects
  */
 
+// Initialize BpTx structure
+int base_init_bp_tx_payload(BpTx *obj);
 
-int base_heap_create_bp_tx_payload(BpTx **obj); 
-//Remember to pass pointer reference to BpTx
-//(we are modifying it afterall)
-
-//Free bpTx that was created with base_heap_create_bp_tx_payload()
-int base_heap_destroy_bp_tx_payload(BpTx *obj);
-
-//Initialize already-created payload
-int base_init_bp_tx_payload(BpTx *obj)
-;
-//Free payload members without freeing actual payload object
-int base_stack_destroy_bp_tx_payload(BpTx *obj);
+// Initialize BpRx structure
+int base_init_bp_rx_payload(BpRx *obj);
 
 #endif

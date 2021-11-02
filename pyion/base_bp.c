@@ -13,28 +13,25 @@
 #include "_utils.c"
 #include "macros.h"
 
-
-
-int base_bp_attach() {
-    
-
-    
+int base_bp_attach()
+{
     int result = bp_attach();
     return result;
 }
 
-
-void base_bp_detach() {
+void base_bp_detach()
+{
     return bp_detach();
 }
 
-
-void base_close_endpoint(BpSapState *state) {
+void base_close_endpoint(BpSapState *state)
+{
     // Close and free attendant
-    if (state->attendant) {
+    if (state->attendant)
+    {
         ionStopAttendant(state->attendant);
         free(state->attendant);
-    } 
+    }
 
     // Close this SAP
     bp_close(state->sap);
@@ -43,31 +40,17 @@ void base_close_endpoint(BpSapState *state) {
     free(state);
 }
 
-int base_bp_interrupt(BpSapState *state) {
+int base_bp_interrupt(BpSapState *state)
+{
     bp_interrupt(state->sap);
-     // Pause the attendant
-    if (state->attendant) ionPauseAttendant(state->attendant);
+    // Pause the attendant
+    if (state->attendant)
+        ionPauseAttendant(state->attendant);
     return 0;
 }
 
-int base_create_bp_tx_payload(BpTx **obj) {
-    BpTx *txInfo = malloc(sizeof(BpTx));
-    txInfo->destEid = NULL;
-    txInfo->reportEid = NULL;
-    txInfo->ttl = 0;
-    txInfo->classOfService = 0;
-    txInfo->custodySwitch = 0;
-    txInfo->rrFlags = 0;
-    txInfo->ackReq = 0;
-    txInfo->retxTimer = 0;
-    txInfo->data = NULL;
-    txInfo->data_size = 0;
-    txInfo->ancillaryData = NULL;
-    *obj = txInfo;
-    return 0;
-}
-
-int base_init_bp_tx_payload(BpTx *txInfo) {
+int base_init_bp_tx_payload(BpTx *txInfo)
+{
     txInfo->destEid = NULL;
     txInfo->reportEid = NULL;
     txInfo->ttl = 0;
@@ -82,17 +65,16 @@ int base_init_bp_tx_payload(BpTx *txInfo) {
     return 0;
 }
 
-int base_stack_destroy_bp_tx_payload(BpTx *obj) {
+int base_init_bp_rx_payload(BpRx *obj)
+{
+    obj->len = 0;
+    obj->do_malloc = 0;
+    obj->payload = NULL;
     return 0;
 }
 
-int base_heap_destroy_bp_tx_payload(BpTx *obj) {
-   return 0;
-}
-
-
-int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
-
+int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg)
+{
     // Define variables
     int data_size, len, rx_ret, do_malloc;
     Sdr sdr;
@@ -102,10 +84,7 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     // Define variables to store the bundle payload. If payload size is less than
     // MAX_PREALLOC_BUFFER, then use preallocated buffer to save time. Otherwise,
     // call malloc to allocate as much memory as you need.
-   
     char *payload;
-
-   
 
     // Get ION's SDR
     sdr = bp_get_sdr();
@@ -113,11 +92,13 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     CHKZERO(dlv);
     CHKZERO(msg);
 
-    while (state->status == EID_RUNNING) {
+    while (state->status == EID_RUNNING)
+    {
         rx_ret = bp_receive(state->sap, dlv, BP_BLOCKING);
-                                    // Acquire the GIL
+        // Acquire the GIL
         // Check if error while receiving a bundle
-        if ((rx_ret < 0) && (state->status == EID_RUNNING)) {
+        if ((rx_ret < 0) && (state->status == EID_RUNNING))
+        {
             return PYION_IO_ERR;
         }
 
@@ -130,22 +111,26 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     }
 
     // If you exited because of interruption
-    if (state->status == EID_INTERRUPTING) {
+    if (state->status == EID_INTERRUPTING)
+    {
         return PYION_INTERRUPTED_ERR;
     }
 
     // If you exited because of closing
-    if (state->status == EID_CLOSING) {
-        return  PYION_CONN_ABORTED_ERR;
+    if (state->status == EID_CLOSING)
+    {
+        return PYION_CONN_ABORTED_ERR;
     }
 
     // If endpoint was stopped, finish
-    if (dlv->result == BpEndpointStopped) {
-        return  PYION_CONN_ABORTED_ERR;
+    if (dlv->result == BpEndpointStopped)
+    {
+        return PYION_CONN_ABORTED_ERR;
     }
 
     // If bundle does not have the payload, raise IOError
-    if (dlv->result != BpPayloadPresent) {
+    if (dlv->result != BpPayloadPresent)
+    {
         return PYION_IO_ERR;
     }
 
@@ -167,86 +152,96 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg){
     SDR_BEGIN_XN
     len = zco_receive_source(sdr, &reader, data_size, payload);
 
+    // Store the data in the output structure
     msg->payload = payload;
     msg->len = len;
     msg->do_malloc = do_malloc;
 
-    // Handle error while getting the payload
-    if (sdr_end_xn(sdr) < 0 || len < 0) {
+    // Close transaction and/or handle error while getting the payload
+    if (sdr_end_xn(sdr) < 0 || len < 0)
+    {
         // Clean up tasks
         if (do_malloc) free(payload);
+
         return PYION_IO_ERR;
-        //return NULL;
     }
     return 0;
 }
 
-
-int base_bp_receive_data(BpSapState *state, BpRx *msg) {
+int base_bp_receive_data(BpSapState *state, BpRx *msg)
+{
     BpDelivery dlv;
 
     int status = help_receive_data(state, &dlv, msg);
-    bp_release_delivery(&dlv,1);
+    bp_release_delivery(&dlv, 1);
 
     // Close if necessary. Otherwise set to IDLE
-    if (state->status == EID_CLOSING) {
+    if (state->status == EID_CLOSING)
+    {
         base_close_endpoint(state);
-    } else {
+    }
+    else
+    {
         state->status = EID_IDLE;
     }
 
     return status;
 }
 
-
-int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctrl) {
-        // Define variables
+int base_bp_open(BpSapState **state_ref, char *ownEid, int detained, int mem_ctrl)
+{
+    // Define variables
     int ok;
-    
+
     //malloc space for bp sap state
-    *state_ref = (BpSapState*)malloc(sizeof(BpSapState));
+    *state_ref = (BpSapState *)malloc(sizeof(BpSapState));
 
     BpSapState *state = *state_ref;
 
-    if (state == NULL) {
+    if (state == NULL)
+    {
         return -1;
     }
     memset((char *)state, 0, sizeof(BpSapState));
 
-      // Open the endpoint. This call fills out the SAP information
+    // Open the endpoint. This call fills out the SAP information
     // NOTE: An endpoint must be opened in detained mode if you want
     //       to have custody-based re-tx.
-    if (detained == 0) {
+    if (detained == 0)
+    {
         ok = bp_open(ownEid, &(state->sap));
-    } else {
+    }
+    else
+    {
         ok = bp_open_source(ownEid, &(state->sap), 1);
     }
-    if (ok < 0) {
+    if (ok < 0)
+    {
         return PYION_IO_ERR;
     }
 
-        // Mark the SAP state for this endpoint as running
-    state->status   = EID_IDLE;
+    // Mark the SAP state for this endpoint as running
+    state->status = EID_IDLE;
     state->detained = (detained > 0);
 
-    if (mem_ctrl) {
+    if (mem_ctrl)
+    {
         // Allocate memory for new attendant
-        state->attendant = (ReqAttendant*)malloc(sizeof(ReqAttendant));
-        
+        state->attendant = (ReqAttendant *)malloc(sizeof(ReqAttendant));
+
         // Initialize the attendant
-        if (ionStartAttendant(state->attendant)) {
+        if (ionStartAttendant(state->attendant))
+        {
             return -3;
         }
-    } else {
+    }
+    else
+    {
         state->attendant = NULL;
     }
 
-return ok;
-
-
+    return ok;
 }
-
-
 
 /**
  * 
@@ -265,7 +260,6 @@ int base_bp_send(BpSapState *state, BpTx *txInfo)
     Object bundleZco;
     Object bundleSdr;
     int ok;
-   
 
     // Initialize variables
     sdr = bp_get_sdr();
@@ -281,12 +275,13 @@ int base_bp_send(BpSapState *state, BpTx *txInfo)
 
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, txInfo->data_size,
                              txInfo->classOfService, 0, ZcoOutbound, state->attendant);
-    if (bundleZco == 0) {
+    if (bundleZco == 0)
+    {
         return PYION_IO_ERR;
     }
-    ok = bp_send(state->sap, txInfo->destEid, txInfo->reportEid, txInfo->ttl, 
-                txInfo->classOfService, txInfo->custodySwitch, txInfo->rrFlags, 
-                txInfo->ackReq, txInfo->ancillaryData, bundleZco, &newBundle);
+    ok = bp_send(state->sap, txInfo->destEid, txInfo->reportEid, txInfo->ttl,
+                 txInfo->classOfService, txInfo->custodySwitch, txInfo->rrFlags,
+                 txInfo->ackReq, txInfo->ancillaryData, bundleZco, &newBundle);
 
     // If you want custody transfer and have specified a re-transmission timer,
     // then activate it
