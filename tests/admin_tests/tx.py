@@ -103,7 +103,7 @@ time.sleep(2.5)
 # Update the contact plan
 ts, te = 0, 10
 for i in range(10):
-    pyion.cgr_add_contact(1, 3, '+{}'.format(ts), '+{}'.format(te), 10000)
+    pyion.cgr_add_contact(0, 1, 3, '+{}'.format(ts), '+{}'.format(te), 10000)
     time.sleep(1)
     ts, te = ts+20, te+20
 
