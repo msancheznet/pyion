@@ -20,6 +20,9 @@
 // Other includes
 #include <Python.h>
 #include "_utils.c"
+#include "macros.h"
+
+#include <stdio.h>
 
 /* ============================================================================
  * === _admin global variables
@@ -49,6 +52,8 @@ static char bp_endpoint_exists_docstring[] =
     "Check if a BP endpoint is defined in ION.";
 static char bp_add_endpoint_docstring[] =
     "Define and add a new BP endpoint.";
+static char list_regions_docstring[] =
+    "List all regions in ION.";
 static char list_contacts_docstring[] =
     "List all contacts in ION's contact plan.";
 static char list_ranges_docstring[] =
@@ -75,6 +80,7 @@ static char cfdp_pdu_size_docstring[] =
 static PyObject *pyion_bp_watch(PyObject *self, PyObject *args);
 static PyObject *pyion_bp_endpoint_exists(PyObject *self, PyObject *args);
 static PyObject *pyion_bp_add_endpoint(PyObject *self, PyObject *args);
+static PyObject *pyion_list_regions(PyObject *self, PyObject *args);
 static PyObject *pyion_list_contacts(PyObject *self, PyObject *args);
 static PyObject *pyion_list_ranges(PyObject *self, PyObject *args);
 static PyObject *pyion_add_contact(PyObject *self, PyObject *args);
@@ -91,6 +97,7 @@ static PyMethodDef module_methods[] = {
     {"bp_watch", pyion_bp_watch, METH_VARARGS, bp_watch_docstring},
     {"bp_endpoint_exists", pyion_bp_endpoint_exists, METH_VARARGS, bp_endpoint_exists_docstring},
     {"bp_add_endpoint", pyion_bp_add_endpoint, METH_VARARGS, bp_add_endpoint_docstring},
+    {"list_regions", pyion_list_regions, METH_VARARGS, list_regions_docstring},
     {"list_contacts", pyion_list_contacts, METH_VARARGS, list_contacts_docstring},
     {"list_ranges", pyion_list_ranges, METH_VARARGS, list_ranges_docstring},
     {"add_contact", pyion_add_contact, METH_VARARGS, add_contact_docstring},
@@ -246,6 +253,46 @@ static PyObject *pyion_bp_add_endpoint(PyObject *self, PyObject *args) {
 }
 
 /* ============================================================================
+ * === Region functions
+ * ============================================================================ */
+
+static PyObject *pyion_list_regions(PyObject *self, PyObject *args) {
+    // Attach to ION
+    if (!py_ion_attach()) return NULL;
+
+    // Define variables
+    char err_msg[150];
+    Sdr	sdr = getIonsdr();
+    Object	iondbObj;
+	IonDB	iondb;
+    int	i;
+    PyObject *regions = PyList_New(0);
+
+    // Initialize variables
+    iondbObj = getIonDbObject();
+	CHKERR(iondbObj);
+
+    // Get data from the SDR
+    Py_BEGIN_ALLOW_THREADS
+    if (!sdr_begin_xn(sdr)) {
+        pyion_SetExc(PyExc_RuntimeError, "Cannot start SDR transaction.");
+        return NULL;
+    }
+    sdr_read(sdr, (char *) &iondb, iondbObj, sizeof(IonDB));
+    sdr_exit_xn(sdr);
+    Py_END_ALLOW_THREADS
+
+    // Build output list
+    for (i = 0; i < 2; i++) {
+        PyObject *item = Py_BuildValue("i", (int)iondb.regions[i].regionNbr);
+        PyList_Append(regions, item);
+	}
+
+    // Return list
+    return regions;
+}
+
+/* ============================================================================
  * === Contact plan functions
  * ============================================================================ */
 
@@ -379,15 +426,8 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    // Pick the region (home or outer. See ionrc manual)
-    int rid = ionPickRegion(regionIdx);
-    if (rid > 1) {
-        pyion_SetExc(PyExc_ValueError, "This node is not part of region %i.", regionIdx);
-        return NULL;
-    }
-
     // Insert a contact
-    ok = rfx_insert_contact(rid, fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr, announce);
+    ok = rfx_insert_contact(regionIdx, fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr, announce);
     if (ok < 0) {
         pyion_SetExc(PyExc_RuntimeError, "Error in rfx_insert_contact.");
         return NULL;
@@ -441,8 +481,9 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
     // Define variables
     uint32_t regionNbr;
     char *fromTimeStr = NULL;
+    time_t fromTime_val;
     uvast fromNode, toNode;
-    time_t fromTime;
+    time_t* fromTime = NULL;
     int announce;
 
     // Parse the input tuple. Raises error automatically if not possible
@@ -451,10 +492,9 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
         return NULL;
 
     // If fromTime is None, set to 0
-    if (!fromTimeStr) {
-        fromTime = 0;
-    } else {
-        fromTime = pyion_readTimestampUTC(fromTimeStr);
+    if (fromTimeStr) {
+        fromTime_val = pyion_readTimestampUTC(fromTimeStr);
+        fromTime = &fromTime_val;
         
         // Raise exception if parsing timestamp failed
         if (!fromTime) {
@@ -464,7 +504,7 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
     }
 
     // Delete the contact(s)
-    oK(rfx_remove_contact(regionNbr, &fromTime, fromNode, toNode, announce));
+    oK(rfx_remove_contact(regionNbr, fromTime, fromNode, toNode, announce));
 
     Py_RETURN_NONE;
 }

@@ -21,7 +21,8 @@ import _admin
 
 # Define all methods/vars exposed at pyion
 _cgr    = ['cgr_list_contacts', 'cgr_list_ranges', 'cgr_add_contact', 
-           'cgr_add_range', 'cgr_delete_contact', 'cgr_delete_range']
+           'cgr_add_range', 'cgr_delete_contact', 'cgr_delete_range',
+           'cgr_list_regions']
 _bp     = ['bp_endpoint_exists', 'bp_add_endpoint', 'bp_list_endpoints']
 _ltp    = ['ltp_span_exists', 'ltp_update_span', 'ltp_info_span']
 _cfdp   = ['cfdp_update_pdu_size']
@@ -58,6 +59,17 @@ def bp_list_endpoints():
     raise NotImplementedError
 
 # ============================================================================
+# === Functions to manage regions
+# ============================================================================
+
+def cgr_list_regions():
+    """ List all the regions defined in this ION node
+
+        :return List[int]: List of region numbers
+    """
+    return _admin.list_regions()
+
+# ============================================================================
 # === Functions to create/delete/modify the contact plan
 # ============================================================================
 
@@ -79,16 +91,15 @@ def cgr_list_ranges():
     """
     return _admin.list_ranges()
 
-def cgr_add_contact(region_nbr, orig, dest, tstart, tend, rate, region=0, confidence=1.0, announce=True):
+def cgr_add_contact(orig, dest, tstart, tend, rate, region_nbr=1, confidence=1.0, announce=True):
     """ Add a contact to ION's contact plan
 
-        :param int region_nbr: Region number for this node
         :param int orig: Node number of the contact origin
         :param int dest: Node number of the contact destination
-        :param str tstart: Contact start time. Format is ``yyyy/mm/dd-hh:MM:ss``
-        :param str tend: Contact end time. Format is ``yyyy/mm/dd-hh:MM:ss``
+        :param str tstart: Contact start time. Format is ``yyyy/mm/dd-hh:MM:ss`` or ``+0``
+        :param str tend: Contact end time. Format is ``yyyy/mm/dd-hh:MM:ss`` or ``+0``
         :param float rate: Contact data rate in [bits/sec].
-        :param int region: Region index. Defaults to 0.
+        :param int region_nbr: Region index. Defaults to 1.
         :param float confidence: Contact confidence. Defaults to 1. 
         :param bool announce: If True, the information of this contact will be multicasted
                               to all nodes in the region. Default is True
@@ -123,14 +134,14 @@ def cgr_add_range(orig, dest, tstart, tend, owlt=0.0, announce=True):
     # Add the range
     _admin.add_range(orig, dest, tstart, tend, int(owlt), int(announce))
 
-def cgr_delete_contact(region_nbr, orig, dest, tstart=None, announce=True):
+def cgr_delete_contact(orig, dest, tstart=None, region_nbr=1, announce=True):
     """ Delete a contact from ION's contact plan
 
-        :param int region_nbr: Region number for this node
         :param int orig: Node number of the contact origin
         :param int dest: Node number of the contact destination. 
         :param str tstart: Contact start time. If None, all contacts between orig and
                            dest are deleted. Format is ``yyyy/mm/dd-hh:MM:ss``
+        :param int region_nbr: Region number for this node. Defaults to 1                           
         :param bool announce: If True, the information of this contact will be multicasted
                               to all nodes in the region. Default is True                           
     """
