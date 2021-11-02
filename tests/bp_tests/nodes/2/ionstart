@@ -5,7 +5,7 @@
 # ==================================================================================================================================================================================================================
 
 ionadmin	node.ionrc
-ionadmin	../two_node_contact_plan.ionrc &
+ionadmin	contact_plan.ionrc &
 ionsecadmin	node.ionsecrc &
 bpadmin		node.bprc &
 
