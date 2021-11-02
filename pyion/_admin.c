@@ -26,7 +26,7 @@
  * ============================================================================ */
 
 // Contact is dict {orig: int, dest: int, tstart: str, tend: str, rate: float, confidence: float}
-static char *py_contact_def = "{s:K, s:K, s:s, s:s, s:I, s:d}";
+static char *py_contact_def = "{s:i, s:K, s:K, s:s, s:s, s:I, s:d}";
 
 // Range is dict {orig: int, dest: int, tstart: str, tend: str, owlt: int}
 static char *py_range_def   = "{s:K, s:K, s:s, s:s, s:I}";
@@ -197,7 +197,7 @@ static PyObject *pyion_bp_endpoint_exists(PyObject *self, PyObject *args) {
 
     // Find the enpoint
     if (!sdr_pybegin_xn(bpSdr)) goto error;
-    findEndpoint(NULL, metaEid.nss, vscheme, &vpoint, &elt);
+    findEndpoint(NULL, &metaEid, vscheme, &vpoint, &elt);
     sdr_exit_xn(bpSdr);
 
     // Return value
@@ -284,7 +284,8 @@ static PyObject *pyion_list_contacts(PyObject *self, PyObject *args) {
         writeTimestampUTC(contact->toTime, toTimeBuffer);
 
         // Save this contact information
-        PyList_Append(py_contacts, Py_BuildValue(py_contact_def, "orig", contact->fromNode, "dest",
+        PyList_Append(py_contacts, Py_BuildValue(py_contact_def, "region_nbr", contact->regionNbr,
+                                                "orig", contact->fromNode, "dest",
                                                 contact->toNode, "tstart", fromTimeBuffer, "tend",
                                                 toTimeBuffer, "rate", 8*contact->xmitRate, "confidence",
                                                 contact->confidence));
@@ -348,18 +349,20 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
 
     // Define variables
     PsmAddress	xaddr;
-    int regionIdx;
+    uint32_t regionIdx;
     uvast fromNode, toNode;
     time_t fromTime, toTime;
     char *fromTimeStr;
     char *toTimeStr;
     unsigned int xmitRate;
     float confidence;
+    int announce;
     int ok;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "iKKssIf", (int*) &regionIdx, (unsigned long long *)&fromNode, 
-                        (unsigned long long *)&toNode, &fromTimeStr, &toTimeStr, &xmitRate, &confidence))
+    if (!PyArg_ParseTuple(args, "iKKssIfi", (int*) &regionIdx, (unsigned long long *)&fromNode, 
+                        (unsigned long long *)&toNode, &fromTimeStr, &toTimeStr, &xmitRate, &confidence,
+                        &announce))
         return NULL;
 
     // Parse the timestamps
@@ -384,7 +387,7 @@ static PyObject *pyion_add_contact(PyObject *self, PyObject *args) {
     }
 
     // Insert a contact
-    ok = rfx_insert_contact(rid, fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr);
+    ok = rfx_insert_contact(rid, fromTime, toTime, fromNode, toNode, xmitRate, confidence, &xaddr, announce);
     if (ok < 0) {
         pyion_SetExc(PyExc_RuntimeError, "Error in rfx_insert_contact.");
         return NULL;
@@ -404,10 +407,11 @@ static PyObject *pyion_add_range(PyObject *self, PyObject *args) {
     char *fromTimeStr;
     char *toTimeStr;
     unsigned int owlt;
+    int announce;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "KKssI", (unsigned long long *)&fromNode, (unsigned long long *)&toNode,
-                        &fromTimeStr, &toTimeStr, &owlt))
+    if (!PyArg_ParseTuple(args, "KKssIi", (unsigned long long *)&fromNode, (unsigned long long *)&toNode,
+                        &fromTimeStr, &toTimeStr, &owlt, &announce))
         return NULL;
 
     // Parse the timestamps
@@ -425,7 +429,7 @@ static PyObject *pyion_add_range(PyObject *self, PyObject *args) {
     }
 
     // Insert a range
-    oK(rfx_insert_range(fromTime, toTime, fromNode, toNode, owlt, &xaddr));
+    oK(rfx_insert_range(fromTime, toTime, fromNode, toNode, owlt, &xaddr, announce));
 
     Py_RETURN_NONE;
 }
@@ -435,12 +439,15 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
     if (!py_ion_attach()) return NULL;
 
     // Define variables
+    uint32_t regionNbr;
     char *fromTimeStr = NULL;
     uvast fromNode, toNode;
     time_t fromTime;
+    int announce;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "KKz", (unsigned long long *)&fromNode, (unsigned long long *)&toNode, &fromTimeStr))
+    if (!PyArg_ParseTuple(args, "iKKzi", (int*)&regionNbr, (unsigned long long *)&fromNode,  
+                          (unsigned long long *)&toNode, &fromTimeStr, &announce))
         return NULL;
 
     // If fromTime is None, set to 0
@@ -450,11 +457,14 @@ static PyObject *pyion_delete_contact(PyObject *self, PyObject *args) {
         fromTime = pyion_readTimestampUTC(fromTimeStr);
         
         // Raise exception if parsing timestamp failed
-        if (fromTime == 0) return NULL;
+        if (!fromTime) {
+            pyion_SetExc(PyExc_ValueError, "Cannot parse tstart=%s", fromTimeStr);
+            return NULL; 
+        }
     }
 
     // Delete the contact(s)
-    oK(rfx_remove_contact(&fromTime, fromNode, toNode));
+    oK(rfx_remove_contact(regionNbr, &fromTime, fromNode, toNode, announce));
 
     Py_RETURN_NONE;
 }
@@ -467,9 +477,11 @@ static PyObject *pyion_delete_range(PyObject *self, PyObject *args) {
     char *fromTimeStr = NULL;
     uvast fromNode, toNode;
     time_t fromTime;
+    int announce;
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "KKz", (unsigned long long *)&fromNode, (unsigned long long *)&toNode, &fromTimeStr))
+    if (!PyArg_ParseTuple(args, "KKzi", (unsigned long long *)&fromNode, (unsigned long long *)&toNode, 
+                        &fromTimeStr, &announce))
         return NULL;
 
     // If fromTime is None, set to 0
@@ -486,7 +498,7 @@ static PyObject *pyion_delete_range(PyObject *self, PyObject *args) {
     }
 
     // Delete the contact(s)
-    oK(rfx_remove_range(&fromTime, fromNode, toNode));
+    oK(rfx_remove_range(&fromTime, fromNode, toNode, announce));
 
     Py_RETURN_NONE;
 }
@@ -628,7 +640,7 @@ static PyObject *pyion_ltp_info_span(PyObject *self, PyObject *args) {
                                               span->maxExportSessions, "max_import_sessions", span->maxImportSessions,
                                               "agg_size_limit", span->aggrSizeLimit, "agg_time_limit", span->aggrTimeLimit,
                                               "max_segment_size", span->maxSegmentSize, "lso_cmd", span->lsoCmd,
-                                              "lso_pid", vspan->lsoPid, "lsi_pid", vdb->lsiPid, "q_lat", span->remoteQtime, 
+                                              "lso_pid", vspan->lsoPid, "q_lat", span->remoteQtime, 
                                               "purge", span->purge));
     }
 

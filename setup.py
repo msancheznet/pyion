@@ -199,7 +199,7 @@ _mem = Extension('_mem',
 
 # Define the extensions to compile
 _ext_modules = [_bp, _cfdp, _ltp, _mem]
-#if ion_path: _ext_modules.append(_admin)
+if ion_path: _ext_modules.append(_admin)
 
 # ========================================================================================
 # === Main setup

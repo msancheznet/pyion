@@ -79,9 +79,10 @@ def cgr_list_ranges():
     """
     return _admin.list_ranges()
 
-def cgr_add_contact(orig, dest, tstart, tend, rate, region=0, confidence=1.0):
+def cgr_add_contact(region_nbr, orig, dest, tstart, tend, rate, region=0, confidence=1.0, announce=True):
     """ Add a contact to ION's contact plan
 
+        :param int region_nbr: Region number for this node
         :param int orig: Node number of the contact origin
         :param int dest: Node number of the contact destination
         :param str tstart: Contact start time. Format is ``yyyy/mm/dd-hh:MM:ss``
@@ -89,6 +90,8 @@ def cgr_add_contact(orig, dest, tstart, tend, rate, region=0, confidence=1.0):
         :param float rate: Contact data rate in [bits/sec].
         :param int region: Region index. Defaults to 0.
         :param float confidence: Contact confidence. Defaults to 1. 
+        :param bool announce: If True, the information of this contact will be multicasted
+                              to all nodes in the region. Default is True
 
         .. Warning:: The contact data rate gets transformed to bytes/sec 
                      and rounded internally
@@ -98,9 +101,9 @@ def cgr_add_contact(orig, dest, tstart, tend, rate, region=0, confidence=1.0):
     tend   = utils.rel2abs_time(tend)
 
     # Add the contact
-    _admin.add_contact(region, orig, dest, tstart, tend, int(rate/8), confidence)
+    _admin.add_contact(region_nbr, orig, dest, tstart, tend, int(rate/8), confidence, int(announce))
 
-def cgr_add_range(orig, dest, tstart, tend, owlt=0.0):
+def cgr_add_range(orig, dest, tstart, tend, owlt=0.0, announce=True):
     """ Add a range to ION's contact plan
 
         :param int orig: Node number of the contact origin
@@ -108,6 +111,8 @@ def cgr_add_range(orig, dest, tstart, tend, owlt=0.0):
         :param str tstart: Contact start time. Format is ``yyyy/mm/dd-hh:MM:ss``
         :param str tend: Contact end time. Format is ``yyyy/mm/dd-hh:MM:ss``
         :param float owlt: Range in light seconds.
+        :param bool announce: If True, the information of this contact will be multicasted
+                              to all nodes in the region. Default is True
 
         .. Warning:: The owlt gets rounded internally
     """
@@ -116,21 +121,24 @@ def cgr_add_range(orig, dest, tstart, tend, owlt=0.0):
     tend   = utils.rel2abs_time(tend)
 
     # Add the range
-    _admin.add_range(orig, dest, tstart, tend, int(owlt))
+    _admin.add_range(orig, dest, tstart, tend, int(owlt), int(announce))
 
-def cgr_delete_contact(orig, dest, tstart=None):
+def cgr_delete_contact(region_nbr, orig, dest, tstart=None, announce=True):
     """ Delete a contact from ION's contact plan
 
+        :param int region_nbr: Region number for this node
         :param int orig: Node number of the contact origin
         :param int dest: Node number of the contact destination. 
         :param str tstart: Contact start time. If None, all contacts between orig and
                            dest are deleted. Format is ``yyyy/mm/dd-hh:MM:ss``
+        :param bool announce: If True, the information of this contact will be multicasted
+                              to all nodes in the region. Default is True                           
     """
     # If tstart/tend is/are provided in relative format, transform it to absolute
     if tstart: tstart = utils.rel2abs_time(tstart)
 
     # Delete the contact
-    _admin.delete_contact(orig, dest, tstart)
+    _admin.delete_contact(region_nbr, orig, dest, tstart, int(announce))
 
 def cgr_delete_range(orig, dest, tstart=None):
     """ Delete a range from ION's contact plan
