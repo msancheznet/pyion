@@ -169,15 +169,6 @@ PyMODINIT_FUNC PyInit__cfdp(void) {
 }
 
 /* ============================================================================
- * === Define structures for this module
- * ============================================================================ */
-
-
-/* ============================================================================
- * === Define global variables
- * ============================================================================ */
-
-/* ============================================================================
  * === Attach/Detach Functions
  * ============================================================================ */
 
@@ -315,9 +306,6 @@ static PyObject *pyion_cfdp_add_fs_req(PyObject *self, PyObject *args) {
     // Return True to indicate success
     Py_RETURN_NONE;
 }
-
-
-
 
 static PyObject *pyion_cfdp_send(PyObject *self, PyObject *args) {
     // Define variables

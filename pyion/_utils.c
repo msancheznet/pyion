@@ -181,7 +181,6 @@ static int sdr_pybegin_xn(Sdr sdr) {
     // If failure to start transaction, set Exception
     if (!ok) return PYION_SDR_ERR; 
     
-
     // Return True if success
     return ok;
 }
