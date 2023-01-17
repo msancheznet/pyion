@@ -82,13 +82,15 @@ README = (Path(__file__).parent / "README.md").read_text()
 # Grab environment variables
 lib_path = os.environ.get('LD_LIBRARY_PATH')
 ion_path = os.environ.get('ION_HOME')
+bp_version = os.environ.get('PYION_BP_VERSION')
 
-# ION_HOME is now mandatory since bputa should be public API but is not.
+# Check that environment variables are correct
 if not ion_path:
     raise ValueError(("Environment variable ION_HOME must indicate the location of ION's ",
                       "source code directory"))
+if not bp_version:
+    raise ValueError("Environment variable PYION_BP_VERSION is missing. Set it to BPv6 or BPv7")
                        
-
 # Set paths for ION's public API
 if lib_path is None:
     # Default paths
@@ -104,12 +106,17 @@ else:
     ion_lib = lib_path                      # ION shared libraries (.so)
 
 # Set paths for compiling _admin
-ion_path  = Path(ion_path)
-bp_lib   = ion_path/'bpv7'/'library'
-cfdp_lib = ion_path/'cfdp'/'library'
+ion_path = Path(ion_path)
+ici_inc  = ion_path/'ici'/'include'
 ltp_lib  = ion_path/'ltp'/'library'
 cfdp_inc = ion_path/'cfdp'/'include'
-ici_inc  = ion_path/'ici'/'include'
+cfdp_lib = ion_path/'cfdp'/'library'
+if bp_version.lower() == 'bpv6'
+    bp_lib = ion_path/'bpv6'/'library'
+elif bp_version.lower() == 'bpv7'
+    bp_lib = ion_path/'bpv7'/'library'
+else:
+    raise ValueError("Environment variable PYION_BP_VERSION must be BPv6 or BPv7")
 
 # ========================================================================================
 # === Figure out compile-time options
@@ -157,7 +164,7 @@ _admin = Extension('_admin',
 # Define the ION-BP extension and related directories
 _bp = Extension('_bp',
                 include_dirs=[str(ion_inc)],
-                libraries=['bp', 'ici','ltp', 'cfdp'],
+                libraries=['bp', 'ici', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_bp.c',
                 './pyion/_utils.c',
@@ -178,7 +185,7 @@ _cfdp = Extension('_cfdp',
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
                 include_dirs=[str(ion_inc)],
-                libraries=['ltp', 'ici','bp','cfdp'],
+                libraries=['ltp', 'ici', 'bp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',
                 './pyion/_utils.c',
@@ -199,7 +206,7 @@ _mem = Extension('_mem',
 
 # Define the extensions to compile
 _ext_modules = [_bp, _cfdp, _ltp, _mem]
-if ion_path: _ext_modules.append(_admin)
+#if ion_path: _ext_modules.append(_admin)
 
 # ========================================================================================
 # === Main setup
