@@ -111,9 +111,9 @@ ici_inc  = ion_path/'ici'/'include'
 ltp_lib  = ion_path/'ltp'/'library'
 cfdp_inc = ion_path/'cfdp'/'include'
 cfdp_lib = ion_path/'cfdp'/'library'
-if bp_version.lower() == 'bpv6'
+if bp_version.lower() == 'bpv6':
     bp_lib = ion_path/'bpv6'/'library'
-elif bp_version.lower() == 'bpv7'
+elif bp_version.lower() == 'bpv7':
     bp_lib = ion_path/'bpv7'/'library'
 else:
     raise ValueError("Environment variable PYION_BP_VERSION must be BPv6 or BPv7")
