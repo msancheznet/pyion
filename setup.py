@@ -21,10 +21,11 @@
 # Date:     04/12/2019
 # Updated:  MSN -- 08/28/2019: Adds _admin extension
 #           MSN -- 10/28/2019: Adds ability to work with LD_LIBRARY_PATH
+#           MSN -- 01/17/2023: Add support for both BPv6 and BPv7
+#           MSN -- 01/17/2023: Add support for PY_SSIZE_T_CLEAN
 #
 # License Terms
 # -------------
-#
 # Copyright (c) 2019, California Institute of Technology ("Caltech").  
 # U.S. Government sponsorship acknowledged.
 #
@@ -62,8 +63,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-4.1.0'
-__release__ = 'R2021a'
+__version__ = 'pyion-4.1.2'
+__release__ = 'R2023a'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -74,6 +75,10 @@ class SetupWarning(UserWarning):
 
 # The text of the README file
 README = (Path(__file__).parent / "README.md").read_text()
+
+# Enforce Python3
+if sys.version_info.major < 3:
+    raise EnvironmentError('pyion only support Python3')
 
 # ========================================================================================
 # === Locate paths for ION's public/private APIs
@@ -148,6 +153,17 @@ compile_args = [
     '-Wno-unused-variable'
 ]
 
+# Starting in Python 3.9, variant formats of the Python C Interface require that
+# the PY_SSIZE_T_CLEAN macro be defined.
+# See https://docs.python.org/3/c-api/arg.html#strings-and-buffers
+# See https://stackoverflow.com/questions/70705404/systemerror-py-ssize-t-clean-macro-must-be-defined-for-formats
+# See https://setuptools.pypa.io/en/latest/userguide/ext_modules.html
+# See https://docs.python.org/3.10/extending/extending.html#extracting-parameters-in-extension-functions
+c_macros = [
+    ('PY_SSIZE_T_CLEAN', None),
+    ('PYION_BP_VERSION', bp_version)
+]
+
 # ========================================================================================
 # === Define all pyion C Extensions
 # ========================================================================================
@@ -158,7 +174,8 @@ _admin = Extension('_admin',
                 libraries=['ici', 'bp', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_admin.c'],
-                extra_compile_args=compile_args
+                extra_compile_args=compile_args,
+                define_macros=c_macros
                 )
 
 # Define the ION-BP extension and related directories
@@ -167,19 +184,19 @@ _bp = Extension('_bp',
                 libraries=['bp', 'ici', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_bp.c',
-                './pyion/_utils.c',
-                './pyion/base_bp.c'],
-                extra_compile_args=compile_args
+                './pyion/_utils.c', './pyion/base_bp.c'],
+                extra_compile_args=compile_args,
+                define_macros=c_macros
                 )
 
 # Define the ION-CFDP extension and related directories
 _cfdp = Extension('_cfdp',
-                include_dirs=[str(ion_inc), str(cfdp_inc)],    
+                include_dirs=[str(ion_inc), str(cfdp_inc), str(cfdp_lib)],    
                 libraries=['cfdp', 'ici'],
                 library_dirs=[str(ion_lib), str(cfdp_lib)],
-                sources=['./pyion/_cfdp.c',
-                './pyion/base_cfdp.c'],
-                extra_compile_args=compile_args
+                sources=['./pyion/_cfdp.c', './pyion/base_cfdp.c'],
+                extra_compile_args=compile_args,
+                define_macros=c_macros
                 )
 
 # Define the ION-LTP extension and related directories
@@ -188,9 +205,9 @@ _ltp = Extension('_ltp',
                 libraries=['ltp', 'ici', 'bp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',
-                './pyion/_utils.c',
-                './pyion/base_ltp.c'],
-                extra_compile_args=compile_args
+                './pyion/_utils.c', './pyion/base_ltp.c'],
+                extra_compile_args=compile_args,
+                define_macros=c_macros
                 )
 
 # Define the ION memory extension and related directories
@@ -198,10 +215,9 @@ _mem = Extension('_mem',
                 include_dirs=[str(ion_inc)],
                 libraries=['ici', 'bp', 'cfdp', 'ltp'],        # bp is required
                 library_dirs=[str(ion_lib)],
-                sources=['./pyion/_mem.c',
-                './pyion/base_mem.c'
-                ],
-                extra_compile_args=compile_args
+                sources=['./pyion/_mem.c', './pyion/base_mem.c'],
+                extra_compile_args=compile_args,
+                define_macros=c_macros
                 )
 
 # Define the extensions to compile
