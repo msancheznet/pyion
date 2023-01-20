@@ -24,7 +24,8 @@ build:
       - export PYION_HOME=$(pwd)
       - export PYION_BP_VERSION=BPv7
       - wget https://sourceforge.net/projects/ion-dtn/files/ion-open-source-4.1.2.tar.gz
-      - tar -xvzf ion-open-source-4.1.2.tar.gz -C .
+      - tar -xvzf ion-open-source-4.1.2.tar.gz
+      - cp -a ./ion-open-source-4.1.2/. .
       - ls -l
       - ./configure
       - make
