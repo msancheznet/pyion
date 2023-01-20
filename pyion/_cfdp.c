@@ -251,6 +251,7 @@ static PyObject *pyion_cfdp_close(PyObject *self, PyObject *args) {
 
     // Free the memory
     free(params);
+    params = NULL;
 
     // Return True to indicate success
     Py_RETURN_NONE;
