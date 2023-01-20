@@ -23,6 +23,7 @@ build:
       - wget https://sourceforge.net/projects/ion-dtn/files/ion-open-source-4.1.2.tar.gz
       - tar -xvzf ion-open-source-4.1.2.tar.gz
       - cd ./ion-open-source-4.1.2
+      - ls -l
       - ./configure
       - make
       - make install
