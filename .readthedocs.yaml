@@ -23,8 +23,10 @@ build:
     pre_create_environment:
       - wget https://sourceforge.net/projects/ion-dtn/files/ion-open-source-4.1.2.tar.gz
       - tar -xvzf ion-open-source-4.1.2.tar.gz
-      - export ION_HOME=/
-      - cd ion-open-source-4.1.2
+      - export ION_HOME=$(pwd)/ion-open-source-4.1.2
+      - export PYION_HOME=$(pwd)
+      - export PYION_BP_VERSION=BPv7
+      - cd $ION_HOME
       - ./configure
       - make
       - make install
