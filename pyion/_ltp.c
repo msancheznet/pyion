@@ -99,11 +99,6 @@ PyMODINIT_FUNC PyInit__ltp(void) {
 #define MAX_LTP_SESSIONS 1024
 
 /* ============================================================================
- * === Define structures for this module
- * ============================================================================ */
-
-
-/* ============================================================================
  * === Attach/Detach Functions
  * ============================================================================ */
 
@@ -218,17 +213,19 @@ static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args) {
 
 static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
     // Define variables
-    char                err_msg[150];
-    LtpSAP              *state;
-    int ok;
-    LtpTxPayload        txInfo;
+    char           err_msg[150];
+    LtpSAP         *state;
+    int            ok;
+    LtpTxPayload   txInfo;
+    Py_ssize_t     data_size;
 
     // Parse input arguments. First one is SAP memory address for this endpoint
     if (!PyArg_ParseTuple(args, "kKs#", (unsigned long *)&state, &(txInfo.destEngineId),
-     &(txInfo.data), &(txInfo.data_size)))
+     &(txInfo.data), &data_size))
         return NULL;
 
-   
+    // Unsafe cast from Py_ssize_t to int. Mandatory starting with python 3.10
+    txInfo.data_size = (int)data_size;
 
     // Send using LTP protocol. All data is sent as RED LTP by definition.
     // NOTE 1: SessionId is filled by ``ltp_send``, but you do not care about it
@@ -251,7 +248,6 @@ static PyObject *pyion_ltp_send(PyObject *self, PyObject *args) {
 /* ============================================================================
  * === Receive Functionality
  * ============================================================================ */
-
 
 static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
     char err_msg[150];
@@ -308,11 +304,10 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
             sprintf(err_msg, "Error extracting data from block");
             //PyErr_SetString(PyExc_IOError, err_msg);
             return NULL;
-    
 
         default:
         ;
-        }
+    }
 
     // Close if necessary. Otherwise set to IDLE
     if (state->status == SAP_CLOSING) {
@@ -321,7 +316,7 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
         state->status = SAP_IDLE;
     }
 
-    PyObject *ret = Py_BuildValue("y#", payloadObj.payload, payloadObj.len);
+    PyObject *ret = Py_BuildValue("y#", payloadObj.payload, (Py_ssize_t)payloadObj.len);
 
     free(payloadObj.payload);
 

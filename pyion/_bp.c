@@ -172,10 +172,6 @@ PyMODINIT_FUNC PyInit__bp(void)
 }
 
 /* ============================================================================
- * === Define structures for this module
- * ============================================================================ */
-
-/* ============================================================================
  * === Define global variables
  * ============================================================================ */
 
@@ -315,7 +311,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args)
     // Define variables
 
     Sdr sdr = NULL;
-    int data_size;
+    Py_ssize_t data_size;
     char *data;
     char *reportEid, *destEid;
     int ok, ttl, classOfService, rrFlags, ackReq;
@@ -343,7 +339,7 @@ static PyObject *pyion_bp_send(PyObject *self, PyObject *args)
     txInfo.ackReq = ackReq;
     txInfo.retxTimer = retxTimer;
     txInfo.data = data;
-    txInfo.data_size = data_size;
+    txInfo.data_size = (int)data_size;   // Dangerous cast
     txInfo.ancillaryData = ancillaryData;
 
     // Release the GIL
@@ -423,7 +419,7 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
     }
 
     // Build return object
-    ret = Py_BuildValue("y#", msg.payload, msg.len);
+    ret = Py_BuildValue("y#", msg.payload, (Py_ssize_t)msg.len);
 
     // If you allocated memory for this payload, free it here
     if (msg.do_malloc)
@@ -432,9 +428,3 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
     // Return value
     return ret;
 }
-
-/* ============================================================================
- * === BP Report Parsing functionality
- * ============================================================================ */
-
-// TODO
