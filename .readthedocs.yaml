@@ -13,7 +13,6 @@ build:
   apt_packages:
     - man-db
     - build-essential
-    - dos2unix
     - wget
     - autotools-dev
     - automake
@@ -21,12 +20,15 @@ build:
     - python3-setuptools
   jobs:
     pre_create_environment:
+      - echo $(pwd)
       - wget https://sourceforge.net/projects/ion-dtn/files/ion-open-source-4.1.2.tar.gz
       - tar -xvzf ion-open-source-4.1.2.tar.gz
       - export ION_HOME=$(pwd)/ion-open-source-4.1.2
       - export PYION_HOME=$(pwd)
       - export PYION_BP_VERSION=BPv7
+      - echo $ION_HOME
       - cd $ION_HOME
+      - ls -l
       - ./configure
       - make
       - make install
