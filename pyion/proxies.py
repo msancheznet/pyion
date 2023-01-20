@@ -166,6 +166,7 @@ else:
         pyion_sigint_handler(sig, frame)
         prev_sigint_handler(sig, frame)
     signal.signal(signal.SIGINT, combined_sigint_handler)
+    
 # ============================================================================
 # === Proxy to BP in ION for a given node
 # ============================================================================
