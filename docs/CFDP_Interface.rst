@@ -6,7 +6,7 @@ Interface with the CCSDS File Delivery Protocol (CFDP)
 - **CfdpProxy**: Proxy to CFDP engine of ION. You should always obtain these type of proxies by calling ``pyion.get_cfdp_proxy``.
 - **Entity**: Entity that you can use to send/request files. You can also register event handlers to for specific CFDP events. Entities can also be used to send commands to remote engines (e.g. delete/rename file, wait for a file).
 
-Event handlers are defined in pyion as functions that must be registered through the Entity object (see example below). You can defined different handlers for specific events, or a single handler for all events. In either case, the expected function signature for the event handler is
+Event handlers are defined in pyion as functions that must be registered through the Entity object (see example below). You can define different handlers for specific events, or a single handler for all events. In either case, the expected function signature for the event handler is
 
 .. code-block:: python
     :linenos:
@@ -30,10 +30,6 @@ CFDP Example: Transmitter
     # Create a proxy to node 1 and attach to ION
     bpxy = pyion.get_bp_proxy(1)
     cpxy = pyion.get_cfdp_proxy(1)
-
-    # Attach to ION
-    bpxy.bp_attach()
-    cpxy.cfdp_attach()
 
     # Create endpoint and entity
     ept = bpxy.bp_open('ipn:1.1')
@@ -66,10 +62,6 @@ CFDP Example: Receiver
     # Create a proxy to node 2 and attach to ION
     bpxy = pyion.get_bp_proxy(2)
     cpxy = pyion.get_cfdp_proxy(2)
-
-    # Attach to ION
-    bpxy.bp_attach()
-    cpxy.cfdp_attach()
 
     # Create endpoint and entity
     ept = bpxy.bp_open('ipn:2.1')

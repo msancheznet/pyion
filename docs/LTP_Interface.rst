@@ -14,8 +14,7 @@ Under most normal circumstances LTP will ensure delivery of data to destination 
     :linenos:
 
     # General imports
-    import pickle
-    import numpy as np
+    from random import choice
     import string
 
     # Import module
@@ -38,7 +37,7 @@ Under most normal circumstances LTP will ensure delivery of data to destination 
     # Define data to send as a stream of random ASCII chars. Each char
     # uses 1 byte.
     chars = list(string.ascii_lowercase)
-    data  = np.random.choice(chars, size=(data_size,)).astype('|S1').tostring()
+    data  = ''.join([choice(chars) for _ in range(data_size)]).encode('utf-8')
 
     # =================================================================
     # === MAIN
@@ -46,9 +45,6 @@ Under most normal circumstances LTP will ensure delivery of data to destination 
 
     # Create a proxy to LTP
     pxy = pyion.get_ltp_proxy(node_nbr)
-
-    # Attach to ION's LTP engine
-    pxy.ltp_attach()
 
     # Open a endpoint access point for this client and send data
     with pxy.ltp_open(client_id) as sap:
@@ -59,9 +55,6 @@ Under most normal circumstances LTP will ensure delivery of data to destination 
 
 .. code-block:: python
     :linenos:
-
-    # General imports
-    import pickle
 
     # Import module
     import pyion
@@ -82,9 +75,6 @@ Under most normal circumstances LTP will ensure delivery of data to destination 
 
     # Create a proxies to ION
     pxy = pyion.get_ltp_proxy(node_nbr)
-
-    # Attach to ION's BP and CFDP
-    pxy.ltp_attach()
 
     # Open a service access point and receive data
     with pxy.ltp_open(client_id) as sap:
