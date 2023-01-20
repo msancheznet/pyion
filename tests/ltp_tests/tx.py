@@ -15,7 +15,7 @@ sys.path.append('../pyion')
 
 # General imports
 import pickle
-import numpy as np
+from random import choice
 import string
 
 # Import module
@@ -38,7 +38,7 @@ data_size = 2400
 # Define data to send as a stream of random ASCII chars. Each char
 # uses 1 byte.
 chars = list(string.ascii_lowercase)
-data  = np.random.choice(chars, size=(data_size,)).astype('|S1').tostring()
+data  = ''.join([choice(chars) for _ in range(data_size)]).encode('utf-8')
 
 # =================================================================
 # === MAIN

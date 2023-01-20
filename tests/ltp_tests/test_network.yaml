@@ -4,10 +4,11 @@ services:
   node1:
     container_name: ion_node1
     hostname: ion_node1
-    image: ion_ubuntu:4.1.0
+    image: pyion_bpv7:4.1.2
     working_dir: /home/ion-interface
     environment:
-    - ION_HOME=/home/ion-4.1.0
+    - ION_HOME=/home/ion-open-source-4.1.2
+    - PYION_BP_VERSION=BPv7
     volumes:
     - C:/Users/mnet/Documents/Repositories/pyion:/home/ion-interface
     - C:/Users/mnet/Documents/Repositories/pyion/tests/ltp_tests/nodes/1:/home/ion-interface/tests/ltp_tests/nodes/1
@@ -28,10 +29,11 @@ services:
   node2:
     container_name: ion_node2
     hostname: ion_node2
-    image: ion_ubuntu:4.1.0
+    image: pyion_bpv7:4.1.2
     working_dir: /home/ion-interface
     environment:
-    - ION_HOME=/home/ion-4.1.0
+    - ION_HOME=/home/ion-open-source-4.1.2
+    - PYION_BP_VERSION=BPv7
     volumes:
     - C:/Users/mnet/Documents/Repositories/pyion:/home/ion-interface
     - C:/Users/mnet/Documents/Repositories/pyion/tests/ltp_tests/nodes/2:/home/ion-interface/tests/ltp_tests/nodes/2
