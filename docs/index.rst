@@ -76,7 +76,7 @@ Installation Instructions
 ``Pyion`` is currently not hosted in any Python repository (e.g., pip, conda) because installation of the package is only possible in computers where ION is already available. 
 To compile ION and pyion, several dependencies are needed. Therefore, to facilitate the installation process, here is a dockerfile that automates the building an Ubuntu-based Docker image with both ION and pyion installed in them.  
 The steps shown in the file can also be used to install both programs in a host computer manually, and minimal adaptions are needed to operate in other operating systems. Also, note
-that this file assumes that ION and pyion 4.1.2 are being installed. It is provided here as guidance, and the user should modify as needed to get 
+that this file assumes that ION and pyion 4.1.2 are being installed. It is provided here as guidance, and the user should modify as needed.
 
 .. code-block:: dockerfile
     :linenos:
@@ -162,12 +162,14 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
     # Define default command.
     CMD ["tail", "-f", "/dev/null"]
 
-To use this dockerfile in a HOST with Docker, simply run:
+
+To use this dockerfile in a host with Docker, simply run:
 
 .. code-block:: bash
     :linenos:
 
     docker build -t pyion_bpv7:4.1.2 -f .\pyion_v412_bpv7_ubuntu.dockerfile --build_arg IMAGE_NAME=ubuntu:20.04 .
+
 
 Note that to install pyion, three environment variables are used:
     - ``$ION_HOME``, which points to the base path where the ION source code is located (i.e., it contains the ION manual)
