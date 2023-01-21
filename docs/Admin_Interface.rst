@@ -1,6 +1,8 @@
 ION Management Functions
 ========================
 
+AS OF PYION 4.1.2, THE ADMIN MODULE IS DEPRECATED AND NO LONGER SUPPORTED
+
 ``Pyion`` offers a basic set of management functions, mostly in the context of the Bundle Protocol and Contact Graph Routing. Additional management functions can be developed on an ad-hoc basis as new features are requested, but they are not intended to replace the management functions being natively supported by ION (e.g., ``ionadmin``, ``bpadmin``, etc.). Furthermore, the maturity of these management functions is low.
 
 The list of functions provided to interact with CGR are:
