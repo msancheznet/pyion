@@ -126,7 +126,7 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
         rm -rf /var/lib/apt/lists/*
     
     # =============================================================
-    # === COMPILE AND BUILD ION
+    # === DOWNLOAD, COMPILE AND BUILD ION
     # =============================================================
     
     RUN \
@@ -145,7 +145,7 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
         ldconfig
 
     # =============================================================
-    # === DOWNLOAD PYION FROM GITHUB AND COMPILE IT
+    # === DOWNLOAD, COMPILE AND BUILD PYION
     # =============================================================
 
     RUN \
@@ -159,7 +159,7 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
     # === OPEN BASH TERMINAL UPON START
     # =====================================================
 
-    # Define default command.
+    # Default command for the container.
     CMD ["tail", "-f", "/dev/null"]
 
 
