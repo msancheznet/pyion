@@ -1,19 +1,24 @@
+BPv6 vs. BPv7
+=============
+
+ION now supports both Bundle Protocol v6 (RFC 5050) and Bundle Protocol v7 (RFC 9171), but not simultaneously. At compile time, the user specifies whether ION will be built to support BPv6 or BPv7. Much in the same manner, pyion can also support BPv6 or BPv7, but its version must match the version that ION was built with. The environment variable ``PYION_BP_VERSION`` must be set prior to installing pyion to indicate which version of BP is being used.
+
 Interface with the Bundle Protocol (BP)
 =======================================
 
 **pyion** provides two main abstractions to send/receive data through BP:
 
-- **BpProxy**: Proxy to ION engine for a given node (identified by a node number). You should only ever have one proxy per node number. To ensure that this is the case, do not create Proxies manually. Instead, use ``pyion.get_bp_proxy``.
-- **Endpoint**: Endpoint to send/receive data using BP. Do not open/close/interrupt/delete endpoints manually, always do it through the proxy (note that all ``Endpoints`` reference the ``Proxy`` that create them).
+- **BpProxy**: Proxy to ION engine for a given node (identified by a node number). You should only ever have one proxy per bundle node. To ensure that this is the case, do not create Proxies manually. Instead, use ``pyion.get_bp_proxy``.
+- **Endpoint**: Endpoint to send/receive data using BP. Do not open/close/interrupt/delete endpoints manually, always do it through the proxy (note that all ``Endpoints`` reference the ``Proxy`` that created them).
 
 While sending data through ION's BP, several properties can be specified (e.g., time-to-live, required reports, reporting endpoint, etc). These can be defined as inherent to the endpoint (i.e., all bundles send through this endpoint will have a give TTL), in which case they must be specified while calling ``bp_open`` in the ``BpProxy`` object, or as one-of properties for a specific bundle (in which case they must be specified while calling ``bp_send`` in the ``Endpoint`` object).
 
-Not all features available in ION are currently supported. For instance, while you can request BP reports and provide a reporting endpoint, reception of the reports is for now left in binary format and it is thus up to the user to decode them. Similarly, bundles cannot specify advanced class of service properties (ancillary data). Finally, ``pyion`` does not provide any flow control mechanisms when sending data over an endpoint. This means that if you overflow the SDR memory, a Python ``MemoryError`` exception will be raise and it is up to the user to handle it.
+Not all features available in ION are currently supported. For instance, while you can request BP reports while using pyion (and provide a reporting endpoint), reception of the reports is for now left in binary format and it is thus up to the user to decode them. Similarly, bundles cannot specify advanced class of service properties (ancillary data). Finally, ``pyion`` does not provide any flow control mechanisms when sending data over an endpoint. This means that if you overflow the SDR memory, a Python ``MemoryError`` exception will be raised and it is up to the user to handle it.
 
 Endpoints as Python Context Managers
 ------------------------------------
 
-Endpoint objects can be used as context managers since they should always be openend and closes, just like file descriptors or sockets. This can be observed in the following very simple example:
+Endpoint objects can be used as context managers since they should always be openend and closed, just like file descriptors or sockets. The following example shows how to use endpoints as context managers
 
 **Example 1.a: BP Transmitter**
 
@@ -24,7 +29,6 @@ Endpoint objects can be used as context managers since they should always be ope
 
     # Create a proxy to node 1 and attach to ION
     proxy = pyion.get_bp_proxy(1)
-    proxy.bp_attach()
 
     # Open endpoint 'ipn:1.1' and send data to 'ipn:2.1'
     with proxy.bp_open('ipn:1.1') as eid:
@@ -40,7 +44,6 @@ Endpoint objects can be used as context managers since they should always be ope
 
     # Create a proxy to node 2 and attach to it
     proxy = pyion.get_bp_proxy(2) 
-    proxy.bp_attach()
 
     # Listen to 'ipn:2.1' for incoming data
     with proxy.bp_open('ipn:2.1') as eid:
@@ -98,9 +101,6 @@ Here is a more complicated example of a transmitter and receiver that exchange d
 
     # Create a proxy to ION
     proxy = pyion.get_bp_proxy(node_nbr)
-
-    # Attach to ION
-    proxy.bp_attach()
 
     # =================================================================
     # === Acquire reports
@@ -164,9 +164,6 @@ Here is a more complicated example of a transmitter and receiver that exchange d
     # Create a proxy to ION's BP
     proxy = pyion.get_bp_proxy(node_nbr)
 
-    # Attach to ION
-    proxy.bp_attach()
-
     # Open a proxy to receive data
     with proxy.bp_open(EID) as eid:
         # You are now ready to received
@@ -203,3 +200,12 @@ Here is a more complicated example of a transmitter and receiver that exchange d
                     print(data)
             except InterruptedError:
                 break
+                
+Updates from Previous Versions
+------------------------------
+
+The following is a non-comprehensive list of updates included in pyion:
+- BpProxies attach to ION automatically upon creation. It is no longer needed for the user to manually call ``bp_attach``. Similarly, BpProxies detach from ION automatically upon deletion.
+- If ION and pyion are run with BPv6, bundles can be sent with a retransmission timer. Use the ``retx_timer`` property of ``bp_send`` to control how often bundles should be retransmitted.
+- While receiving, Endpoint objects can be given a timeout that will stop the reception process if no bundle arrives within a given timeframe.
+- The size of the data sent or received via an Endpoint should not exceed 2^32-1 bits. 
