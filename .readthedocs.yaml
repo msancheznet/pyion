@@ -42,7 +42,4 @@ formats: all
 
 python:
   install:
-    - method: pip
-      path: sphinx_bootstrap_theme
-#    - method: setuptools
-#      path: .
+    - requirements: docs/requirements.txt
