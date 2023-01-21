@@ -10,6 +10,7 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
+  
 #  apt_packages:
 #    - man-db
 #    - build-essential
@@ -39,7 +40,9 @@ sphinx:
 # Optionally build your docs in additional formats such as PDF and ePub
 formats: all
 
-#python:
-#  install:
+python:
+  install:
+    - method: pip
+      path: sphinx_bootstrap_theme
 #    - method: setuptools
 #      path: .
