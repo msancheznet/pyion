@@ -5,21 +5,20 @@
 # Required
 version: 2
 
+# Set the version of Python and other tools you might need
+build:
+  os: ubuntu-18.04
+  tools:
+    python: "3.5"
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
   configuration: docs/conf.py
 
-# Build documentation with MkDocs
-#mkdocs:
-#  configuration: mkdocs.yml
-
 # Optionally build your docs in additional formats such as PDF and ePub
 formats: all
 
-#conda:
-#  environment: docs/environment.yml
-
+# Install Python requirements
 python:
   install:
-    - method: setuptools
-      path: .
+    - requirements: docs/requirements.txt
