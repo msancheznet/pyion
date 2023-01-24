@@ -1,4 +1,4 @@
-.. DtnSim documentation master file, created by
+.. pyion documentation master file, created by
    sphinx-quickstart on Thu May  3 15:24:01 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -51,7 +51,6 @@ To quickly demonstrate how ``pyion`` works, here is a brief example of two Pytho
 .. code-block:: python
     :linenos:
 
-    python
     import pyion
 
     # Create a proxy to node 2 and attach to it
