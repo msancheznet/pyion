@@ -70,6 +70,22 @@ To quickly demonstrate how ``pyion`` works, here is a brief example of two Pytho
 
 Pyion interfaces with ION through a collection of **proxies**. Each proxy is intended to be linked to a protocol in the DTN protocol stack (i.e., there is a proxy to the BP protocol, as seen in the previous example, but there are different proxies to LTP and CFDP, as well ION's SDR and PSM), as well as a node number. To avoid having muliple proxies to the same node, proxies should not be created directly by the user but rather instantiated using ``pyion.get_<type>_proxy(<node_number>)``. Proxies are used to manage service access points to a given protocol (e.g., endpoint for the BP, entity for CFDP, etc.). This includes opening and closing them, as well as interrupting their operation if necessary. In turn, the access point itself is typically only used to send and receive data.
 
+Multiple ION Nodes in a Single Host
+-----------------------------------
+
+If multiple instances of ION are running on the same host, each one with its own node number, then the ``ION_NODE_LIST_DIR`` environment variable needs to be defined (see the ION manual for further details). This can be done from Python by simply calling
+
+.. code-block:: python
+    :linenos:
+    
+    import pyion
+    pyion.ION_NODE_LIST_DIR = '/<desired path>/nodes'
+
+Reporting Bugs
+--------------
+
+Known bugs are currently documented at https://github.com/msancheznet/pyion/issues. Please submit new issues if new problems and/or bug occur.
+ 
 Installation Instructions
 =========================
 
@@ -109,9 +125,8 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
         apt update && \
         apt install -y --no-install-recommends man-db && \
         apt install -y --no-install-recommends build-essential && \
-        apt install -y git && \
-        apt install -y --no-install-recommends dos2unix && \
         apt install -y --no-install-recommends wget && \
+        apt install -y git && \
         
         # Install ION adependencies
         apt install -y --no-install-recommends autotools-dev && \
@@ -151,7 +166,6 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
     RUN \
         git clone --single-branch --branch v4.1.2 https://github.com/msancheznet/pyion.git $PYION_HOME && \
         cd $PYION_HOME && \
-        find $PYION_HOME -type f -print0 | xargs -0 dos2unix -- && \
         python3 setup.py install && \
         chmod -R +x $PYION_HOME
 
@@ -190,17 +204,6 @@ The only dependency ``pyion`` uses is ION itself. All tests conducted to date ha
 
 - Private ION interface: Optional for installing ``pyion``. If not available, then ``pyion`` has all administrative functions disabled. To enable them, set the environment variable ``ION_HOME`` to ION's root folder and then run the setup process.
 
-Multiple ION Nodes in a Single Host
-===================================
-
-If multiple instances of ION are running on the same host, each one with its own node number, then the ``ION_NODE_LIST_DIR`` environment variable needs to be defined (see the ION manual for further details). This can be done from Python by simply calling
-
-.. code-block:: python
-    :linenos:
-    
-    import pyion
-    pyion.ION_NODE_LIST_DIR = '/<desired path>/nodes'
-
 Copyright and Licensing
 =======================
 
@@ -217,10 +220,9 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :numbered:
 
-   index.rst
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
