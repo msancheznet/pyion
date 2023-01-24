@@ -28,7 +28,7 @@ pyion: A Python Extension for the Interplanetary Overlay Network
 Introduction
 ============
 
-``pyion`` provides a Python interface to JPL's Interplantary Overlay Network (ION) to send/receive data through ION, as well as a limited and still experimental set of administrative functions to modify the ION configuration during runtime. Note that pyion does install ION during its setup process. Instead, installation of pyion is only possible if ION is already installed and running in the host.
+``pyion`` provides a Python interface to JPL's Interplantary Overlay Network (ION) to send/receive data through ION, as well as a limited and still experimental set of management functions to modify the ION configuration during runtime. Note that pyion does **NOT** install ION during its setup process. Instead, installation of pyion is only possible if ION is already available and running in the host.
 
 To quickly demonstrate how ``pyion`` works, here is a brief example of two Python nodes exchanging data by interfacing with ION's implementation of the Bundle Protocol (BP).
 
