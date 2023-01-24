@@ -15,9 +15,10 @@ Bundle Protocol
     :members:
     :show-inheritance:
 
-.. automodule:: pyion._bp
-    :members:
-    :show-inheritance:
+..  
+    .. automodule:: pyion._bp
+        :members:
+        :show-inheritance:
 
 Licklider Transmission Protocol
 -------------------------------
@@ -43,7 +44,7 @@ ION Memory/Storage Functions
 ION Management Functions
 ------------------------
 
-.. automodule:: pyion.admin
+.. automodule:: pyion.mgmt
     :members:
     :show-inheritance:
 

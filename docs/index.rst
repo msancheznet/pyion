@@ -224,8 +224,8 @@ Contents
    BP_Interface.rst
    LTP_Interface.rst
    CFDP_Interface.rst
-   Admin_Interface.rst
    Mem_Interface.rst
+   Mgmt_Interface.rst
    Reference_Guide.rst
    License.rst
 
