@@ -168,12 +168,12 @@ c_macros = [
 # === Define all pyion C Extensions
 # ========================================================================================
 
-# Define ION administrative extension
-_admin = Extension('_admin',
+# Define ION management extension
+_mgmt = Extension('_mgmt',
                 include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib), str(cfdp_lib), str(ici_inc)],
                 libraries=['ici', 'bp', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
-                sources=['./pyion/_admin.c'],
+                sources=['./pyion/_mgmt.c'],
                 extra_compile_args=compile_args,
                 define_macros=c_macros
                 )
@@ -222,7 +222,7 @@ _mem = Extension('_mem',
 
 # Define the extensions to compile
 _ext_modules = [_bp, _cfdp, _ltp, _mem]
-#if ion_path: _ext_modules.append(_admin)
+if ion_path: _ext_modules.append(_mgmt)
 
 # ========================================================================================
 # === Main setup

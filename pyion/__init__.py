@@ -29,7 +29,8 @@
 """
 
 # General imports
-import os    
+import os
+import warnings    
 
 # This pulls up import so that from the user you can do
 # ``import pyion`` instead of having to do one of the following:
@@ -39,11 +40,11 @@ from pyion.proxies import *
 from pyion.utils import *
 from pyion.constants import *
 
-# Handle case where _admin was not compiled during setup
+# Handle case where _mgmt was not compiled during setup
 try:
-    from pyion.admin import *
+    from pyion.mgmt import *
 except ImportError:
-    pass
+    warnings.warn("Pyion's management module is not installed.")
 
 # Must be set if multiple ION nodes are run on the same host.
 ION_NODE_LIST_DIR = None

@@ -4,7 +4,7 @@ services:
   node1:
     container_name: ion_node1
     hostname: ion_node1
-    image: pyion_bpv7_ubuntu18.04:4.1.2
+    image: pyion_bpv7_ubuntu22.04:4.1.2
     working_dir: /home/ion-interface
     environment:
     - ION_HOME=/home/ion-open-source-4.1.2
@@ -29,7 +29,7 @@ services:
   node2:
     container_name: ion_node2
     hostname: ion_node2
-    image: pyion_bpv7_ubuntu18.04:4.1.2
+    image: pyion_bpv7_ubuntu22.04:4.1.2
     working_dir: /home/ion-interface
     environment:
     - ION_HOME=/home/ion-open-source-4.1.2
