@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 import sphinx_bootstrap_theme
 
+autodoc_mock_imports = ["_bp", "_ltp", "_cfdp", "_mem", "_mgmt"]
 
 # -- Project information -----------------------------------------------------
 
@@ -162,7 +163,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'DtnSimdoc'
+htmlhelp_basename = 'pyiondoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
