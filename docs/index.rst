@@ -106,20 +106,20 @@ that this file assumes that ION and pyion 4.1.2 are being installed. It is provi
 
     RUN \
         # Install basic dependencies
-        apt-get update && \
-        apt-get install -y --no-install-recommends man-db && \
-        apt-get install -y --no-install-recommends build-essential && \
-        apt-get install -y git && \
+        apt update && \
+        apt install -y --no-install-recommends man-db && \
+        apt install -y --no-install-recommends build-essential && \
+        apt install -y git && \
         apt install -y --no-install-recommends dos2unix && \
         apt install -y --no-install-recommends wget && \
         
         # Install ION adependencies
-        apt-get install -y --no-install-recommends autotools-dev && \
-        apt-get install -y --no-install-recommends automake && \
+        apt install -y --no-install-recommends autotools-dev && \
+        apt install -y --no-install-recommends automake && \
         
         # Install Python dependencies
-        apt-get install -y --no-install-recommends python3-dev && \
-        apt-get install -y --no-install-recommends python3-setuptools && \
+        apt install -y --no-install-recommends python3-dev && \
+        apt install -y --no-install-recommends python3-setuptools && \
 
         # Clean up (see https://www.fromlatest.io/#/ and 
         # https://hackernoon.com/tips-to-reduce-docker-image-sizes-876095da3b34)
