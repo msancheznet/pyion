@@ -31,3 +31,9 @@ The list of functions provided to interact with BP are:
 The list of functions provided to interact with LTP are:
 
 - Check if an LTP span exists.
+
+Past Versions
+=============
+
+Prior to pyion 4.1.2, the management module was know as the "admin" module. However, this change is transparent to the user
+because all management functionality is accessed direction from the ``pyion`` module, as shown in Example 1.
