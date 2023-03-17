@@ -63,7 +63,7 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-4.1.2'
+__version__ = '4.1.2'
 __release__ = 'R2023a'
 
 # ========================================================================================
