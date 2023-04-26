@@ -13,6 +13,7 @@
 #include <ion.h>
 #include <zco.h>
 #include <ltp.h>
+#include <ltpP.h>
 #include <Python.h>
 
 #include "_utils.c"
@@ -41,6 +42,12 @@ static char ltp_receive_docstring[] =
     "Receive a blob of bytes using LTP.";
 static char ltp_interrupt_docstring[] =
     "Interrupt the reception of LTP data.";
+static char ltp_init_docstring[] =
+    "Initialize LTP database.";
+static char ltp_dequeue_outbound_segment_docstring[] =
+    "Dequeue an outbound LTP segment.";
+static char ltp_handle_inbound_segment_docstring[] =
+    "Enqueue an inbound LTP segment.";
 
 // Declare the functions to wrap
 static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args);
@@ -50,6 +57,9 @@ static PyObject *pyion_ltp_close(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_send(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_init(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_handle_inbound_segment(PyObject *self, PyObject *args);
 
 // Define member functions of this module
 static PyMethodDef module_methods[] = {
@@ -60,11 +70,14 @@ static PyMethodDef module_methods[] = {
     {"ltp_send", pyion_ltp_send, METH_VARARGS, ltp_send_docstring},
     {"ltp_receive", pyion_ltp_receive, METH_VARARGS, ltp_receive_docstring},
     {"ltp_interrupt", pyion_ltp_interrupt, METH_VARARGS, ltp_interrupt_docstring},
+    {"ltp_init", pyion_ltp_init, METH_VARARGS, ltp_init_docstring},
+    {"ltp_dequeue_outbound_segment", pyion_ltp_dequeue_outbound_segment, METH_VARARGS, ltp_dequeue_outbound_segment_docstring},
+    {"ltp_handle_inbound_segment", pyion_ltp_handle_inbound_segment, METH_VARARGS, ltp_handle_inbound_segment_docstring},
     {NULL, NULL, 0, NULL}
 };
 
 /* ============================================================================
- * === Define _bp as a Python module
+ * === Define _ltp as a Python module
  * ============================================================================ */
 
 PyMODINIT_FUNC PyInit__ltp(void) {
@@ -322,4 +335,49 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
 
     // Return value
     return ret;
+}
+
+/* ============================================================================
+ * === Segment Queueing Functionality
+ * ============================================================================ */
+
+static PyObject *pyion_ltp_init(PyObject *self, PyObject *args) {
+    int estMaxExportSessions;
+
+    if (!PyArg_ParseTuple(args, "i", &estMaxExportSessions)) {
+        return NULL;
+    }
+
+    if (ltpInit(estMaxExportSessions) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Error initializing LTP.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *args) {
+    unsigned long long vspan_addr;
+
+    if (!PyArg_ParseTuple(args, "K", &vspan_addr)) {
+        return NULL;
+    }
+
+    LtpVspan *vspan = (LtpVspan *)vspan_addr;
+    char *segment;
+
+    int segmentLen = ltpDequeueOutboundSegment(vspan, &segment);
+    if (segmentLen < 0)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Nonpositive LTP segment length.");
+        return NULL;
+    }
+
+    return PyBytes_FromStringAndSize(segment, segmentLen);
+}
+
+static PyObject *pyion_ltp_handle_inbound_segment(PyObject *self, PyObject *args) {
+    // TODO
+    //base_ltp_handle_inbound_segment();
+    Py_RETURN_NONE;
 }

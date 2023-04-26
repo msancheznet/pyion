@@ -15,16 +15,42 @@ from unittest.mock import Mock
 from pathlib import Path
 from threading import Event, Thread
 from warnings import warn
+import contextlib
 
 # Module imports
 import pyion
 import pyion.utils as utils
+from pyion.mgmt import sm_task_yield
 
 # Import C Extension
 import _ltp
 
 # Define all methods/vars exposed at pyion
-__all__ = ['AccessPoint']
+__all__ = [
+    'ltp_init',
+    'ltp_dequeue_outbound_segment',
+    'ltp_handle_inbound_segment',
+    'AccessPoint',
+]
+
+# ============================================================================
+# === Segment queueing functionality
+# ============================================================================
+
+def ltp_init(estMaxExportSessions):
+    _ltp.ltp_init(estMaxExportSessions)
+
+@contextlib.contextmanager
+def ltp_dequeue_outbound_segment(vspan):
+    try:
+        yield _ltp.ltp_dequeue_outbound_segment(vspan)
+    finally:
+        # Close every LTP dequeue segment handling block with a task yield
+        sm_task_yield()
+
+def ltp_handle_inbound_segment():
+    # TODO
+    pass
 
 # ============================================================================
 # === AccessPoint class
