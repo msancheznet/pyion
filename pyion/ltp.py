@@ -48,9 +48,8 @@ def ltp_dequeue_outbound_segment(vspan):
         # Close every LTP dequeue segment handling block with a task yield
         sm_task_yield()
 
-def ltp_handle_inbound_segment():
-    # TODO
-    pass
+def ltp_handle_inbound_segment(data):
+    _ltp.ltp_handle_inbound_segment(data)
 
 # ============================================================================
 # === AccessPoint class
