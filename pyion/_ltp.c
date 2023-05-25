@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <ion.h>
 #include <zco.h>
 #include <ltp.h>
@@ -18,6 +19,7 @@
 
 #include "_utils.c"
 #include "base_ltp.h"
+#include "_pthread_mutex.h"
 
 /* ============================================================================
  * === _ltp module definitions
@@ -365,13 +367,22 @@ static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *ar
 
     LtpVspan *vspan = (LtpVspan *)vspan_addr;
     char *segment;
+    int segmentLen;
 
-    int segmentLen = ltpDequeueOutboundSegment(vspan, &segment);
+    // Release GIL
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Py_BEGIN_ALLOW_THREADS
+
+    segmentLen = ltpDequeueOutboundSegment(vspan, &segment);
     if (segmentLen < 0)
     {
         PyErr_SetString(PyExc_RuntimeError, "Nonpositive LTP segment length.");
         return NULL;
     }
+
+    // Reacquire GIL
+    Py_END_ALLOW_THREADS
+    PyGILState_Release(gstate);
 
     return PyBytes_FromStringAndSize(segment, segmentLen);
 }

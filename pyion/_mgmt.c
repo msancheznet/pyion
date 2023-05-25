@@ -32,7 +32,7 @@ static char *py_contact_def = "{s:i, s:K, s:K, s:s, s:s, s:I, s:d}";
 // Range is dict {orig: int, dest: int, tstart: str, tend: str, owlt: int}
 static char *py_range_def   = "{s:K, s:K, s:s, s:s, s:I}";
 
-// LTP spain is a dict
+// LTP span is a dict
 static char *py_span_def = "{s:K, s:I, s:I, s:I, s:I, s:I, s:s, s:i, s:i, s:I, s:i}";
 
 /* ============================================================================
@@ -596,7 +596,7 @@ static PyObject *pyion_find_span(PyObject *self, PyObject *args) {
     }
 
     LtpVspan *vspan;
-    PsmAddress vspanElt; // Is an unsigned long
+    PsmAddress vspanElt; // Is an unsigned long long (U64)
 
     Sdr sdr = getIonsdr();
     if (!sdr_begin_xn(sdr))
