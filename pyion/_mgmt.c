@@ -32,7 +32,7 @@ static char *py_contact_def = "{s:i, s:K, s:K, s:s, s:s, s:I, s:d}";
 // Range is dict {orig: int, dest: int, tstart: str, tend: str, owlt: int}
 static char *py_range_def   = "{s:K, s:K, s:s, s:s, s:I}";
 
-// LTP spain is a dict
+// LTP span is a dict
 static char *py_span_def = "{s:K, s:I, s:I, s:I, s:I, s:I, s:s, s:i, s:i, s:I, s:i}";
 
 /* ============================================================================
@@ -66,6 +66,10 @@ static char delete_range_docstring[] =
     "Delete range(s) in ION's contact plan.";
 static char ltp_span_exists_docstring[] =
     "Check if an LTP span is defined in ION.";    
+static char sm_task_yield_docstring[] =
+    "Yield so other tasks may execute.";
+static char find_span_docstring[] =
+    "Find the associated span for a remote engine ID.";
 
 // Declare the functions to wrap
 static PyObject *pyion_bp_watch(PyObject *self, PyObject *args);
@@ -79,6 +83,8 @@ static PyObject *pyion_add_range(PyObject *self, PyObject *args);
 static PyObject *pyion_delete_contact(PyObject *self, PyObject *args);
 static PyObject *pyion_delete_range(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_span_exists(PyObject *self, PyObject *args);
+static PyObject *pyion_sm_task_yield(PyObject *self, PyObject *args);
+static PyObject *pyion_find_span(PyObject *self, PyObject *args);
 
 // Define member functions of this module
 static PyMethodDef module_methods[] = {
@@ -93,6 +99,8 @@ static PyMethodDef module_methods[] = {
     {"delete_contact", pyion_delete_contact, METH_VARARGS, delete_contact_docstring},
     {"delete_range", pyion_delete_range, METH_VARARGS, delete_range_docstring},
     {"ltp_span_exists", pyion_ltp_span_exists, METH_VARARGS, ltp_span_exists_docstring},
+    {"sm_task_yield", pyion_sm_task_yield, METH_VARARGS, sm_task_yield_docstring},
+    {"find_span", pyion_find_span, METH_VARARGS, find_span_docstring},
     {NULL, NULL, 0, NULL}
 };
 
@@ -535,7 +543,8 @@ static PyObject *pyion_delete_range(PyObject *self, PyObject *args) {
  * === LTP management functions
  * ============================================================================ */
 
-static int pyion_find_span(uvast engineNbr, PsmAddress *elt) {
+// This is not an exposed Python wrapper
+static int _find_span(uvast engineNbr, PsmAddress *elt) {
     // Define variables
     Sdr      sdr = getIonsdr();
     LtpVspan *vspan;
@@ -566,7 +575,7 @@ static PyObject *pyion_ltp_span_exists(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "K", &nbr)) goto error;
 
     // Find the span
-    if (!pyion_find_span((uvast)nbr, &elt)) goto error;
+    if (!_find_span((uvast)nbr, &elt)) goto error;
 
     // See if found
     if (elt) goto found; else goto not_found;
@@ -577,4 +586,40 @@ found:
     Py_RETURN_TRUE;
 not_found:
     Py_RETURN_FALSE;
+}
+
+static PyObject *pyion_find_span(PyObject *self, PyObject *args) {
+    unsigned long long remoteEngineId;
+
+    if (!PyArg_ParseTuple(args, "K", &remoteEngineId)) {
+        return NULL;
+    }
+
+    LtpVspan *vspan;
+    PsmAddress vspanElt; // Is an unsigned long long (U64)
+
+    Sdr sdr = getIonsdr();
+    if (!sdr_begin_xn(sdr))
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Error starting SDR transaction.");
+        return NULL;
+    }
+
+    findSpan(remoteEngineId, &vspan, &vspanElt);
+    if (vspanElt == 0)
+    {
+        sdr_exit_xn(sdr);
+        Py_RETURN_NONE;
+    }
+
+    sdr_exit_xn(sdr);
+
+    // TODO hacky but trying to return vspan address
+    uintptr_t vspan_addr = (uintptr_t)vspan;
+    return PyLong_FromUnsignedLongLong((unsigned long long)vspan_addr);
+}
+
+static PyObject *pyion_sm_task_yield(PyObject *self, PyObject *args) {
+    sm_TaskYield();
+    Py_RETURN_NONE;
 }

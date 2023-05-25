@@ -184,7 +184,7 @@ _bp = Extension('_bp',
                 libraries=['bp', 'ici', 'ltp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_bp.c',
-                './pyion/_utils.c', './pyion/base_bp.c'],
+                './pyion/_utils.c', './pyion/base_bp.c', './pyion/_pthread_mutex.c'],
                 extra_compile_args=compile_args,
                 define_macros=c_macros
                 )
@@ -201,11 +201,11 @@ _cfdp = Extension('_cfdp',
 
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc)],
+                include_dirs=[str(ion_inc), str(ltp_lib)],
                 libraries=['ltp', 'ici', 'bp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',
-                './pyion/_utils.c', './pyion/base_ltp.c'],
+                './pyion/_utils.c', './pyion/base_ltp.c', './pyion/_pthread_mutex.c'],
                 extra_compile_args=compile_args,
                 define_macros=c_macros
                 )

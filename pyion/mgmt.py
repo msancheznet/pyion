@@ -26,7 +26,17 @@ _cgr    = ['cgr_list_contacts', 'cgr_list_ranges', 'cgr_add_contact',
 _bp     = ['bp_endpoint_exists', 'bp_add_endpoint', 'bp_list_endpoints']
 _ltp    = ['ltp_span_exists']
 _cfdp   = []
-__all__ = _cgr + _bp + _ltp + _cfdp
+__all__ = ['find_span', 'sm_task_yield'] + _cgr + _bp + _ltp + _cfdp
+
+# ============================================================================
+# === Miscellaneous ION functions
+# ============================================================================
+
+def find_span(remote_engine_id):
+    return _mgmt.find_span(remote_engine_id)
+
+def sm_task_yield():
+    _mgmt.sm_task_yield
 
 # ============================================================================
 # === Functions to add endpoints

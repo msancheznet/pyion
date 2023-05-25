@@ -10,13 +10,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <ion.h>
 #include <zco.h>
 #include <ltp.h>
+#include <ltpP.h>
 #include <Python.h>
 
 #include "_utils.c"
 #include "base_ltp.h"
+#include "_pthread_mutex.h"
 
 /* ============================================================================
  * === _ltp module definitions
@@ -41,6 +44,12 @@ static char ltp_receive_docstring[] =
     "Receive a blob of bytes using LTP.";
 static char ltp_interrupt_docstring[] =
     "Interrupt the reception of LTP data.";
+static char ltp_init_docstring[] =
+    "Initialize LTP database.";
+static char ltp_dequeue_outbound_segment_docstring[] =
+    "Dequeue an outbound LTP segment.";
+static char ltp_handle_inbound_segment_docstring[] =
+    "Enqueue an inbound LTP segment.";
 
 // Declare the functions to wrap
 static PyObject *pyion_ltp_attach(PyObject *self, PyObject *args);
@@ -50,6 +59,9 @@ static PyObject *pyion_ltp_close(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_send(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args);
 static PyObject *pyion_ltp_interrupt(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_init(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *args);
+static PyObject *pyion_ltp_handle_inbound_segment(PyObject *self, PyObject *args);
 
 // Define member functions of this module
 static PyMethodDef module_methods[] = {
@@ -60,11 +72,14 @@ static PyMethodDef module_methods[] = {
     {"ltp_send", pyion_ltp_send, METH_VARARGS, ltp_send_docstring},
     {"ltp_receive", pyion_ltp_receive, METH_VARARGS, ltp_receive_docstring},
     {"ltp_interrupt", pyion_ltp_interrupt, METH_VARARGS, ltp_interrupt_docstring},
+    {"ltp_init", pyion_ltp_init, METH_VARARGS, ltp_init_docstring},
+    {"ltp_dequeue_outbound_segment", pyion_ltp_dequeue_outbound_segment, METH_VARARGS, ltp_dequeue_outbound_segment_docstring},
+    {"ltp_handle_inbound_segment", pyion_ltp_handle_inbound_segment, METH_VARARGS, ltp_handle_inbound_segment_docstring},
     {NULL, NULL, 0, NULL}
 };
 
 /* ============================================================================
- * === Define _bp as a Python module
+ * === Define _ltp as a Python module
  * ============================================================================ */
 
 PyMODINIT_FUNC PyInit__ltp(void) {
@@ -322,4 +337,77 @@ static PyObject *pyion_ltp_receive(PyObject *self, PyObject *args) {
 
     // Return value
     return ret;
+}
+
+/* ============================================================================
+ * === Segment Queueing Functionality
+ * ============================================================================ */
+
+static PyObject *pyion_ltp_init(PyObject *self, PyObject *args) {
+    int estMaxExportSessions;
+
+    if (!PyArg_ParseTuple(args, "i", &estMaxExportSessions)) {
+        return NULL;
+    }
+
+    if (ltpInit(estMaxExportSessions) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Error initializing LTP.");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *args) {
+    unsigned long long vspan_addr;
+
+    if (!PyArg_ParseTuple(args, "K", &vspan_addr)) {
+        return NULL;
+    }
+
+    LtpVspan *vspan = (LtpVspan *)vspan_addr;
+    char *segment;
+    int segmentLen;
+
+    // Release GIL
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Py_BEGIN_ALLOW_THREADS
+
+    segmentLen = ltpDequeueOutboundSegment(vspan, &segment);
+    if (segmentLen < 0)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Nonpositive LTP segment length.");
+        return NULL;
+    }
+
+    // Reacquire GIL
+    Py_END_ALLOW_THREADS
+    PyGILState_Release(gstate);
+
+    return PyBytes_FromStringAndSize(segment, segmentLen);
+}
+
+static PyObject *pyion_ltp_handle_inbound_segment(PyObject *self, PyObject *args) {
+    char *buffer;
+    Py_ssize_t segment_size;
+
+    if (!PyArg_ParseTuple(args, "y#", &buffer, &segment_size)) {
+        return NULL;
+    }
+
+    // Release GIL
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Py_BEGIN_ALLOW_THREADS
+
+    if (ltpHandleInboundSegment(buffer, segment_size) < 0)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Unable to ingest inbound LTP segment.");
+        return NULL;
+    }
+
+    // Reacquire GIL
+    Py_END_ALLOW_THREADS
+    PyGILState_Release(gstate);
+
+    Py_RETURN_NONE;
 }
