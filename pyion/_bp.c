@@ -215,8 +215,7 @@ static PyObject *pyion_bp_detach(PyObject *self, PyObject *args)
 
 static PyObject *pyion_bp_open(PyObject *self, PyObject *args)
 {
-
-    //state object, we will be returning a form of this
+    // State object, we will be returning a form of this
     BpSapState *state = NULL;
     int ok;
     char *ownEid;

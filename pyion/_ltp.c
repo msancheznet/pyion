@@ -388,18 +388,26 @@ static PyObject *pyion_ltp_dequeue_outbound_segment(PyObject *self, PyObject *ar
 }
 
 static PyObject *pyion_ltp_handle_inbound_segment(PyObject *self, PyObject *args) {
-    char *buffer; // Intentionally an I8 type, `ltpHandleInboundSegment()` expects `char`
+    char *buffer;
     Py_ssize_t segment_size;
 
     if (!PyArg_ParseTuple(args, "y#", &buffer, &segment_size)) {
         return NULL;
     }
 
+    // Release GIL
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Py_BEGIN_ALLOW_THREADS
+
     if (ltpHandleInboundSegment(buffer, segment_size) < 0)
     {
         PyErr_SetString(PyExc_RuntimeError, "Unable to ingest inbound LTP segment.");
         return NULL;
     }
+
+    // Reacquire GIL
+    Py_END_ALLOW_THREADS
+    PyGILState_Release(gstate);
 
     Py_RETURN_NONE;
 }
