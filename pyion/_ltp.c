@@ -19,7 +19,6 @@
 
 #include "_utils.c"
 #include "base_ltp.h"
-#include "_pthread_mutex.h"
 
 /* ============================================================================
  * === _ltp module definitions
