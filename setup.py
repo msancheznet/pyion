@@ -201,7 +201,7 @@ _cfdp = Extension('_cfdp',
 
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc)],
+                include_dirs=[str(ion_inc), str(ltp_lib)],
                 libraries=['ltp', 'ici', 'bp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',
