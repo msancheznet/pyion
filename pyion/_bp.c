@@ -96,7 +96,8 @@ static char bp_receive_docstring[] =
     "Receive a blob of bytes using bp_send.\n"
     "Arguments\n"
     "---------\n"
-    "Long [k]: Memory address of SAP to receive from";
+    "Long [k]: Memory address of SAP to receive from\n"
+    "Int [i]: Return bundle headers as dictionary. Defaults to false.";
 static char bp_interrupt_docstring[] =
     "Interrupt an endpoint that is blocked while receiving.\n"
     "Arguments\n"
@@ -375,15 +376,19 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
 {
     // Define variables
     BpSapState *state;
+    PyObject *ret_payload;
+    PyObject *ret_payload_metadata;
     PyObject *ret;
     int status;
     BpRx msg;
+
+    int return_header = 0; // Don't return header by default
     
     // Initialize output structure
     base_init_bp_rx_payload(&msg);
 
     // Parse the input tuple. Raises error automatically if not possible
-    if (!PyArg_ParseTuple(args, "k", (unsigned long *)&state))
+    if (!PyArg_ParseTuple(args, "ki", (unsigned long *)&state, &return_header))
         return NULL;
 
     // Mark as running
@@ -417,9 +422,30 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    // Build return object
-    ret = Py_BuildValue("y#", msg.payload, (Py_ssize_t)msg.len);
+    // Build first object (message payload) in return tuple
+    ret_payload = Py_BuildValue("y#", msg.payload, (Py_ssize_t)msg.len);
+    
+    if (return_header){
+        // Build second object (message metadata) in return tuple
+        ret_payload_metadata = PyDict_New();
 
+        // Add some key-value pairs to the dictionary (modify as needed)
+        // TODO: Make sure that data is copied from buffer, do not delete data buffer or use pointer/reference
+        // TODO: Py_BuildValue may already do copying, but make sure this is the case 
+        PyDict_SetItemString(ret_payload_metadata, "timeToLive", PyLong_FromLong(msg.timeToLive));
+        PyDict_SetItemString(ret_payload_metadata, "bundleSourceEid", Py_BuildValue("s", msg.bundleSourceEid));
+        PyDict_SetItemString(ret_payload_metadata, "metadata", Py_BuildValue("y#", msg.metadata, (Py_ssize_t)msg.metadataLen));
+        PyDict_SetItemString(ret_payload_metadata, "metadataType", Py_BuildValue("c", msg.metadataType));
+        PyDict_SetItemString(ret_payload_metadata, "bundleCreationTimeCount", PyLong_FromLong(msg.bundleCreationTime.count));
+        PyDict_SetItemString(ret_payload_metadata, "bundleCreationTimeMsec", PyLong_FromUnsignedLongLong(msg.bundleCreationTime.msec));
+
+        // Build return object
+        ret = PyTuple_Pack(2, ret_payload, ret_payload_metadata);
+    } else {
+        ret = ret_payload;
+    }
+
+    
     // If you allocated memory for this payload, free it here
     if (msg.do_malloc)
         free(msg.payload);
