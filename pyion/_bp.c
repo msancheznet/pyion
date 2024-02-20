@@ -430,8 +430,6 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
         ret_payload_metadata = PyDict_New();
 
         // Add some key-value pairs to the dictionary (modify as needed)
-        // TODO: Make sure that data is copied from buffer, do not delete data buffer or use pointer/reference
-        // TODO: Py_BuildValue may already do copying, but make sure this is the case 
         PyDict_SetItemString(ret_payload_metadata, "timeToLive", PyLong_FromLong(msg.timeToLive));
         PyDict_SetItemString(ret_payload_metadata, "bundleSourceEid", Py_BuildValue("s", msg.bundleSourceEid));
         PyDict_SetItemString(ret_payload_metadata, "metadata", Py_BuildValue("y#", msg.metadata, (Py_ssize_t)msg.metadataLen));
