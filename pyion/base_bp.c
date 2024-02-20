@@ -157,6 +157,18 @@ int help_receive_data(BpSapState *state, BpDelivery *dlv, BpRx *msg)
     msg->len = len;
     msg->do_malloc = do_malloc;
 
+    
+    // Add headers
+    msg->bundleSourceEid = malloc(strlen(dlv->bundleSourceEid) + 1);
+    strcpy(msg->bundleSourceEid, dlv->bundleSourceEid);
+    msg->bundleCreationTime.msec = dlv->bundleCreationTime.msec;
+    msg->bundleCreationTime.count = dlv->bundleCreationTime.count;
+	msg->timeToLive = dlv->timeToLive;
+	msg->metadataType = dlv->metadataType;
+	msg->metadataLen = dlv->metadataLen;
+	memcpy(msg->metadata, dlv->metadata,
+			BP_MAX_METADATA_LEN);
+
     // Close transaction and/or handle error while getting the payload
     if (sdr_end_xn(sdr) < 0 || len < 0)
     {
