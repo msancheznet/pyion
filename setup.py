@@ -110,7 +110,7 @@ else:
     ion_inc = (lib_path.parent)/'include'   # ION headers (.h)
     ion_lib = lib_path                      # ION shared libraries (.so)
 
-# Set paths for compiling _admin
+# Set paths for compiling C Extensions
 ion_path = Path(ion_path)
 ici_inc  = ion_path/'ici'/'include'
 ltp_lib  = ion_path/'ltp'/'library'
@@ -153,7 +153,7 @@ compile_args = [
     '-Wno-unused-variable'
 ]
 
-# Starting in Python 3.9, variant formats of the Python C Interface require that
+# Starting in Python 3.10, variant formats of the Python C Interface require that
 # the PY_SSIZE_T_CLEAN macro be defined.
 # See https://docs.python.org/3/c-api/arg.html#strings-and-buffers
 # See https://stackoverflow.com/questions/70705404/systemerror-py-ssize-t-clean-macro-must-be-defined-for-formats

@@ -121,7 +121,8 @@ static PyMethodDef module_methods[] = {
     {"bp_send", pyion_bp_send, METH_VARARGS, bp_send_docstring},
     {"bp_receive", pyion_bp_receive, METH_VARARGS, bp_receive_docstring},
     {"bp_interrupt", pyion_bp_interrupt, METH_VARARGS, bp_interrupt_docstring},
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL}
+};
 
 /* ============================================================================
  * === Define _bp as a Python module
@@ -427,4 +428,11 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
 
     // Return value
     return ret;
+}
+
+static PyObject *pyion_bp_extract_bundle(){
+    Py_BEGIN_ALLOW_THREADS // Release the GIL
+    status = base_bp_extract_bundle(state, &msg);
+    Py_END_ALLOW_THREADS
+
 }

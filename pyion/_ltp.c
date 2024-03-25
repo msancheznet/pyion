@@ -128,11 +128,8 @@ static PyObject *pyion_ltp_open(PyObject *self, PyObject *args) {
     // Define variables
     unsigned int clientId;
     char err_msg[150];
-
-    LtpSAP *state = NULL;
-
+    LtpSAP *state = NULL;    
     
-
     // Parse the input tuple. Raises error automatically if not possible
     if (!PyArg_ParseTuple(args, "I", &clientId))
         return NULL;
@@ -154,14 +151,10 @@ static PyObject *pyion_ltp_open(PyObject *self, PyObject *args) {
         }
     }
 
-   
-
     // Return the memory address of the LTP state as an unsined long
     PyObject *ret = Py_BuildValue("k", state);
     return ret;
 }
-
-
 
 static PyObject *pyion_ltp_close(PyObject *self, PyObject *args) {
     // Define variables

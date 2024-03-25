@@ -18,6 +18,9 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
 import sphinx_bootstrap_theme
 
+# Mark the C extensions as imports to be Mocked. This is useful in readthedocs
+# because you do not need to compile ION+pyion to autogenerate the documentation
+# from the available docstrings.
 autodoc_mock_imports = ["_bp", "_ltp", "_cfdp", "_mem", "_mgmt"]
 
 # -- Project information -----------------------------------------------------

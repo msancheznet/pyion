@@ -4,6 +4,9 @@ dist
 pyion.egg-info
 *.so
 *.pyc
+*.ppt
+*.pptx
+*.code-workspace
 
 tests/bp_tests/nodes/ion_nodes
 tests/bp_tests/nodes/1/ion.log

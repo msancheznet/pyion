@@ -14,6 +14,7 @@ Bundle Protocol
 .. automodule:: pyion.bp
     :members:
     :show-inheritance:
+    :autodoc_mock_imports: 
 
 ..  
     .. automodule:: pyion._bp
