@@ -33,7 +33,7 @@ author = 'Marc Sanchez Net'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-version    = 'pyion-4.1.2'
+version    = '4.1.2'
 release    = 'R2023a'
 rst_epilog = '.. |version| replace:: %s' % str(version)
 rst_epilog = '.. |release| replace:: %s' % str(release)

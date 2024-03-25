@@ -63,7 +63,7 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = 'pyion-4.1.2'
+__version__ = '4.1.2'
 __release__ = 'R2023a'
 
 # ========================================================================================
@@ -201,7 +201,7 @@ _cfdp = Extension('_cfdp',
 
 # Define the ION-LTP extension and related directories
 _ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc)],
+                include_dirs=[str(ion_inc), str(ltp_lib)],
                 libraries=['ltp', 'ici', 'bp', 'cfdp'],
                 library_dirs=[str(ion_lib)],
                 sources=['./pyion/_ltp.c',

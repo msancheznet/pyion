@@ -200,14 +200,15 @@ class Endpoint():
 		# Send it
 		self.bp_send(dest_eid, file_path.read_bytes(), **kwargs)
 
-	def _bp_receive(self, chunk_size):
+	def _bp_receive(self, chunk_size, return_headers):
 		""" Receive one or multiple bundles.
 
 			:param chunk_size: Number of bytes to receive at once.
+			:param return_headers: If true, will return bundle headers.
 		"""
 		# If no chunk size defined, simply get data in the next bundle
 		if chunk_size is None:
-			self.rx_result = self._bp_receive_bundle()
+			self.rx_result = self._bp_receive_bundle(return_headers)
 			return
 
 		# Pre-allocate buffer of the correct size and create a memory view
@@ -217,20 +218,25 @@ class Endpoint():
 		# Initialize variables
 		extra_bytes = None
 		bytes_read  = 0
+		headers = {}
 
 		# Read bundles as long as you have not reached the chunk size
 		while self.is_open and bytes_read < chunk_size:
 			# Get data from next bundle
-			data = _bp.bp_receive(self._sap_addr)
-
+			data = _bp.bp_receive(self._sap_addr, return_headers)
+			
 			# If data is of type exception, return
 			if isinstance(data, BaseException):
 				self.rx_result = data
 				return
 
 			# Create memoryview to this bundle's payload
-			bmem = memoryview(data)
+			bmem = memoryview(data[0])
 			sz   = len(bmem)
+
+			if return_headers:
+				# Extract headers from bundle
+				headers = data[1]
 
 			# Put as much data as possible in the pre-allocated buffer
 			idx     = min(bytes_read+sz, chunk_size)
@@ -246,20 +252,24 @@ class Endpoint():
 			bytes_read += sz
 
 		# If there are extra bytes add them
-		self.rx_result = memv.tobytes()
-		if extra_bytes: self.rx_result += extra_bytes.tobytes()
+		
+		self.rx_result = (memv.tobytes(), headers)
+		if extra_bytes: self.rx_result[0] += extra_bytes.tobytes()
+		
+		if not return_headers:
+			self.rx_result = self.rx_result[0]
 
 	@utils.in_ion_folder
-	def _bp_receive_bundle(self):
+	def _bp_receive_bundle(self, return_headers):
 		""" Receive one bundle """
 		# Get payload from next bundle. If exception, return it too
 		try:
-			return _bp.bp_receive(self._sap_addr)
+			return _bp.bp_receive(self._sap_addr, return_headers)
 		except BaseException as e:
 			return e
 
 	@utils._chk_is_open
-	def bp_receive(self, chunk_size=None, timeout=None):
+	def bp_receive(self, chunk_size=None, timeout=None, return_headers=False):
 		""" Receive data through the proxy. This is BLOCKING call. If an error
 			occurred while receiving, an exception is raised.
 		
@@ -278,6 +288,10 @@ class Endpoint():
 							   with length >= chunk_size)
 			:param timeout: If not specified, then no timeout is used. If specified,
 							reception of a bundle will be cancelled after timeout seconds.
+			:param return_headers: If set to True, the return value of bp_receive will be a
+									tuple where the first value is the payload and the second
+									is a dictionary containing the bundle header information.
+									This value defaults to False. 
 		"""
 		# Get default values if necessary
 		if chunk_size is None: chunk_size = self.chunk_size
@@ -289,7 +303,7 @@ class Endpoint():
 			raise ValueError('bp_receive cannot have chunk_size and timeout at the same time.')
 
 		# Open another thread because otherwise you cannot handle a SIGINT
-		th = Thread(target=self._bp_receive, args=(chunk_size,), daemon=True)
+		th = Thread(target=self._bp_receive, args=(chunk_size,return_headers,), daemon=True)
 		th.start()
 
 		# Wait for a bundle to be delivered	and set a timeout

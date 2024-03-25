@@ -44,6 +44,12 @@ typedef struct
     int do_malloc;
     char payload_prealloc[MAX_PREALLOC_BUFFER];
     char *payload; // If we must malloc, remember to set do_malloc to 1         
+    char *bundleSourceEid;
+	BpTimestamp	bundleCreationTime;
+	unsigned int timeToLive;
+    unsigned char	metadataType;	/*	See RFC 6258.		*/
+	unsigned char	metadataLen;
+	unsigned char	metadata[BP_MAX_METADATA_LEN];
 } BpRx;
 
 /**
