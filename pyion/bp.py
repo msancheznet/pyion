@@ -320,9 +320,6 @@ class Endpoint():
 
 		return self.rx_result
 
-	def bp_extract_bundle(self):
-		_bp.bp_extract_bundle(...)
-
 	def _bp_receive_timeout(self):
 		# Interrupt the reception of bundles from ION. 
 		self.proxy.bp_interrupt(self)

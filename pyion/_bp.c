@@ -452,10 +452,3 @@ static PyObject *pyion_bp_receive(PyObject *self, PyObject *args)
     // Return value
     return ret;
 }
-
-static PyObject *pyion_bp_extract_bundle(){
-    Py_BEGIN_ALLOW_THREADS // Release the GIL
-    status = base_bp_extract_bundle(state, &msg);
-    Py_END_ALLOW_THREADS
-
-}

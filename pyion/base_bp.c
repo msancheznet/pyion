@@ -275,16 +275,13 @@ int base_bp_send(BpSapState *state, BpTx *txInfo)
 
     // Initialize variables
     sdr = bp_get_sdr();
-    //printf("THIS IS SOMETHING THAT I ADDED!");
 
     // Insert data to SDR
     SDR_BEGIN_XN
     bundleSdr = sdr_insert(sdr, txInfo->data, (size_t)txInfo->data_size);
     SDR_END_XN
 
-    // If insert failed, cancel transaction and exit
-    //sdr_end_xn(sdr);
-
+    // Create ZCO and send
     bundleZco = ionCreateZco(ZcoSdrSource, bundleSdr, 0, txInfo->data_size,
                              txInfo->classOfService, 0, ZcoOutbound, state->attendant);
     if (bundleZco == 0)
