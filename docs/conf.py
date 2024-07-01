@@ -33,8 +33,8 @@ author = 'Marc Sanchez Net'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-version    = '4.1.2'
-release    = 'R2023a'
+version    = '4.1.3'
+release    = 'R2024a'
 rst_epilog = '.. |version| replace:: %s' % str(version)
 rst_epilog = '.. |release| replace:: %s' % str(release)
 
