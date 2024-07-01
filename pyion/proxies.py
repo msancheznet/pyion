@@ -244,7 +244,8 @@ class BpProxy(utils.Proxy):
     def bp_open(self, eid, TTL=3600, priority=cst.BpPriorityEnum.BP_STD_PRIORITY,
                 report_eid=None, custody=cst.BpCustodyEnum.NO_CUSTODY_REQUESTED,
                 report_flags=cst.BpReportsEnum.BP_NO_RPTS, ack_req=cst.BpAckReqEnum.BP_NO_ACK_REQ,
-                retx_timer=0, chunk_size=None, timeout=None, mem_ctrl=False):
+                retx_timer=0, chunk_size=None, timeout=None, mem_ctrl=False, 
+                return_headers=False):
         """ Open an endpoint. If it already exists, the existing instance
             is returned.
 
@@ -270,10 +271,14 @@ class BpProxy(utils.Proxy):
                             is ``BpAckReqEnum.BP_NO_ACK_REQ``
             :param retx_timer: Custodial timer retransmission in [sec]. Defaults to 0, which 
                                means that no timer is created.
-            :param chunk_size: Send/Receive data in bundles of ``chunk_size`` bytes (plus header), 
-                               instead of a single potentially very large bundle.
+            :param chunk_size: Send data in bundles of ``chunk_size`` bytes (plus header), 
+                               instead of a single potentially very large bundle. Only used for
+                               tranmission of data.
             :param timeout: If specified, the endpoint will be interrupted if timeout
                             seconds elapse without receiving anything.
+            :param return_headers: If true, when receiving a bundle, the call to ``bp_receive``
+                                   will return a tuple with the bundle and its headers. Only used
+                                   for receiving data.
             :return: Endpoint object
         """
         # If this EID is already open, return it
@@ -290,7 +295,8 @@ class BpProxy(utils.Proxy):
         # Create an endpoint
         ept_obj = bp.Endpoint(self, eid, sap_addr, TTL, int(priority), report_eid,
                               int(custody), int(report_flags), int(ack_req), 
-                              int(retx_timer), detained, chunk_size, timeout, mem_ctrl)
+                              int(retx_timer), detained, chunk_size, timeout, 
+                              mem_ctrl, bool(return_headers))
 
         # Store it
         self._ept_map[eid] = ept_obj

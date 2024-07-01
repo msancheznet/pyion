@@ -54,7 +54,7 @@ class Endpoint():
 	"""
 	def __init__(self, proxy, eid, sap_addr, TTL, priority, report_eid,
 				 custody, report_flags, ack_req, retx_timer, detained, 
-				 chunk_size, timeout, mem_ctrl):
+				 chunk_size, timeout, mem_ctrl, return_headers):
 		""" Endpoint initializer  """
 		# Store variables
 		self.proxy        = proxy
@@ -72,6 +72,7 @@ class Endpoint():
 		self.detained     = detained
 		self.timeout      = timeout
 		self.mem_ctrl     = mem_ctrl
+		self.return_headers = return_headers
 
 		# TODO: This properties are hard-coded because they are not 
 		# yet supported
@@ -135,6 +136,10 @@ class Endpoint():
 		# If using BPv7, custody transfer is not defined
 		if is_bpv7 and custody != BpCustodyEnum.NO_CUSTODY_REQUESTED:
 			raise ValueError('Custody transfer is not allowed in pyion-4.0.0+ since it is not in BPv7')
+
+
+		# Reset of transmit result result
+		self.tx_result = None
 
 		# Create call arguments
 		args = (dest_eid, data, TTL, priority, report_eid, custody, report_flags,
@@ -209,92 +214,14 @@ class Endpoint():
 		# Send it
 		self.bp_send(dest_eid, file_path.read_bytes(), **kwargs)
 
-	def _bp_receive(self, chunk_size, return_headers):
-		""" Receive one or multiple bundles.
-
-			:param chunk_size: Number of bytes to receive at once.
-			:param return_headers: If true, will return bundle headers.
-		"""
-		# If no chunk size defined, simply get data in the next bundle
-		if chunk_size is None:
-			self.rx_result = self._bp_receive_bundle(return_headers)
-			return
-
-		# Pre-allocate buffer of the correct size and create a memory view
-		buf  = bytearray(chunk_size)
-		memv = memoryview(buf)
-
-		# Initialize variables
-		extra_bytes = None
-		bytes_read  = 0
-		headers = {}
-
-		# Read bundles as long as you have not reached the chunk size
-		while self.is_open and bytes_read < chunk_size:
-			# Get data from next bundle
-			data = _bp.bp_receive(self._sap_addr, return_headers)
-			
-			# If data is of type exception, return
-			if isinstance(data, BaseException):
-				self.rx_result = data
-				return
-
-			# Create memoryview to this bundle's payload
-			bmem = memoryview(data[0])
-			sz   = len(bmem)
-
-			if return_headers:
-				# Extract headers from bundle
-				headers = data[1]
-
-			# Put as much data as possible in the pre-allocated buffer
-			idx     = min(bytes_read+sz, chunk_size)
-			to_read = idx-bytes_read
-			memv[bytes_read:idx] = bmem[0:to_read]
-
-			# If this bundle has data that does not fit in pre-allocated buffer
-			# append it at then at the expense of a copy
-			if to_read < sz:
-				extra_bytes = bmem[to_read:]
-			
-			# Update the number of bytes read
-			bytes_read += sz
-
-		# If there are extra bytes add them
-		
-		self.rx_result = (memv.tobytes(), headers)
-		if extra_bytes: self.rx_result[0] += extra_bytes.tobytes()
-		
-		if not return_headers:
-			self.rx_result = self.rx_result[0]
-
-	@utils.in_ion_folder
-	def _bp_receive_bundle(self, return_headers):
-		""" Receive one bundle """
-		# Get payload from next bundle. If exception, return it too
-		try:
-			return _bp.bp_receive(self._sap_addr, return_headers)
-		except BaseException as e:
-			return e
-
 	@utils._chk_is_open
-	def bp_receive(self, chunk_size=None, timeout=None, return_headers=False):
+	def bp_receive(self, timeout=None, return_headers=None):
 		""" Receive data through the proxy. This is BLOCKING call. If an error
 			occurred while receiving, an exception is raised.
 		
 			.. Tip:: The actual data reception is done in a separate thread
 					 so that the user can interrupt it with a SIGINT. 
-			.. Warning:: Use the chunk_size parameter with care. It is provided because each
-						 ``bp_receive`` call has some overhead (e.g. a new thread is spawned),
-						 so you might not want to do this if you expect very small bundles. 
-						 However, if the tx sends an amount of data that is not a multiple of
-						 chunk_size, then ``bp_receive`` will be blocked forever.
 
-			:param chunk_size: If not specified, then read one bundle at a time, with
-							   each bundle having a potentially different size.
-							   If specified, it tells you the least number of bytes to read
-							   at once (i.e., this function will return a bytes object
-							   with length >= chunk_size)
 			:param timeout: If not specified, then no timeout is used. If specified,
 							reception of a bundle will be cancelled after timeout seconds.
 			:param return_headers: If set to True, the return value of bp_receive will be a
@@ -303,25 +230,22 @@ class Endpoint():
 									This value defaults to False. 
 		"""
 		# Get default values if necessary
-		if chunk_size is None: chunk_size = self.chunk_size
 		if timeout is None: timeout = self.timeout
+		if return_headers is None: return_headers = self.return_headers
 
-		# For now, do not let user use both chunk_size and timeout together
-		# to avoid complexity
-		if chunk_size and timeout:
-			raise ValueError('bp_receive cannot have chunk_size and timeout at the same time.')
+		# Reset of receive result
+		self.rx_result = None
 
 		# Open another thread because otherwise you cannot handle a SIGINT
-		th = Thread(target=self._bp_receive, args=(chunk_size,return_headers,), daemon=True)
+		th = Thread(target=self._bp_receive, args=(return_headers,), daemon=True)
 		th.start()
 
-		# Wait for a bundle to be delivered	and set a timeout
+		# Wait for a bundle to be delivered	and set a timeout. Upon timeout expiration
+		# if the thread is still alive, then reception via ION must be interrupted.
 		th.join(timeout)
-
-		# Handle the case where you have timed-out
 		if th.is_alive():
 			self._bp_receive_timeout()
-			return self.rx_result
+			return
 
 		# If exception, raise it
 		if isinstance(self.rx_result, BaseException):
@@ -329,6 +253,18 @@ class Endpoint():
 
 		return self.rx_result
 
+	@utils.in_ion_folder
+	def _bp_receive(self, return_headers):
+		""" Receive one bundle.
+
+			:param return_headers: If true, will return bundle headers.
+		"""
+		# Get payload from next bundle. If exception, return it too
+		try:
+			self.rx_result = _bp.bp_receive(self._sap_addr, int(return_headers))
+		except BaseException as e:
+			self.rx_result = e
+		
 	def _bp_receive_timeout(self):
 		# Interrupt the reception of bundles from ION. 
 		self.proxy.bp_interrupt(self)

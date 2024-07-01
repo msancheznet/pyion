@@ -4,10 +4,10 @@ services:
   node1:
     container_name: ion_node1
     hostname: ion_node1
-    image: pyion_bpv7:4.1.2
+    image: pyion_bpv7:4.1.3
     working_dir: /home/ion-interface
     environment:
-    - ION_HOME=/home/ion-open-source-4.1.2
+    - ION_HOME=/home/ion-open-source-4.1.3
     - PYION_BP_VERSION=BPv7
     volumes:
     - C:/Users/mnet/Documents/Repositories/pyion:/home/ion-interface
@@ -29,10 +29,10 @@ services:
   node2:
     container_name: ion_node2
     hostname: ion_node2
-    image: pyion_bpv7:4.1.2
+    image: pyion_bpv7:4.1.3
     working_dir: /home/ion-interface
     environment:
-    - ION_HOME=/home/ion-open-source-4.1.2
+    - ION_HOME=/home/ion-open-source-4.1.3
     - PYION_BP_VERSION=BPv7
     volumes:
     - C:/Users/mnet/Documents/Repositories/pyion:/home/ion-interface
