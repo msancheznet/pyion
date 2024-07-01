@@ -91,97 +91,91 @@ Installation Instructions
 ``Pyion`` is currently not hosted in any Python repository (e.g., pip, conda) because installation of the package is only possible in computers where ION is already available. 
 To compile ION and pyion, several dependencies are needed. Therefore, to facilitate the installation process, here is a dockerfile that automates the building an Ubuntu-based Docker image with both ION and pyion installed in them.  
 The steps shown in the file can also be used to install both programs in a host computer manually, and minimal adaptions are needed to operate in other operating systems. Also, note
-that this file assumes that ION and pyion 4.1.2 are being installed. It is provided here as guidance, and the user should modify as needed.
+that this file assumes that ION and pyion 4.1.3 are being installed. It is provided here as guidance, and the user should modify as needed.
 
 .. code-block:: dockerfile
     :linenos:
 
-    # Name of the base image
-    ARG IMAGE_NAME
+    # Define base image and pull it
+	ARG IMAGE_NAME=ubuntu:20.04
+	FROM $IMAGE_NAME
+	
+	# =====================================================
+	# === SET WORKING DIRECTORY
+	# =====================================================
+	
+	# Set environment variables.
+	ENV HOME /home
+	ENV ION_HOME /home/ion-open-source-4.1.3
+	ENV PYION_HOME /home/pyion-4.1.3
+	ENV PYION_BP_VERSION BPv7
+	
+	# Define working directory.
+	WORKDIR /home
+	
+	# =====================================================
+	# === INSTALL DEPENDENCIES
+	# =====================================================
+	
+	# Install basic dependencies
+	RUN apt update
+	RUN apt install -y git
+	RUN apt install -y --no-install-recommends man-db
+	RUN apt install -y --no-install-recommends build-essential
+	RUN apt install -y --no-install-recommends dos2unix
+	  
+	# Install ION adependencies
+	RUN apt install -y --no-install-recommends autotools-dev
+	RUN apt install -y --no-install-recommends automake
+	RUN apt install -y --no-install-recommends libtool
+	  
+	# Install Python dependencies
+	RUN apt install -y --no-install-recommends python3-dev
+	RUN apt install -y --no-install-recommends python3-setuptools
+	
+	# Clean up (see https://www.fromlatest.io/#/ and 
+	# https://hackernoon.com/tips-to-reduce-docker-image-sizes-876095da3b34)
+	RUN rm -rf /var/lib/apt/lists/*
+	
+	# =============================================================
+	# === DOWNLOAD, COMPILE AND BUILD ION
+	# =============================================================
+	
+	RUN git clone --single-branch --branch ion-open-source-4.1.3 https://github.com/nasa-jpl/ION-DTN.git $ION_HOME
+	
+	RUN \
+	    cd $ION_HOME && \
+	    autoreconf -fi && \
+	    ./configure && \
+	    make && \
+	    make install && \
+	    ldconfig
 
-    # Pull image
-    FROM $IMAGE_NAME
-
-    # =====================================================
-    # === SET WORKING DIRECTORY AND ENVIRONMENT VARIABLES
-    # =====================================================
-
-    # Define working directory.
-    WORKDIR /home
-
-    # Set environment variables.
-    ENV HOME /home
-    ENV ION_HOME /home/ion-open-source-4.1.2
-    ENV PYION_HOME /home/pyion-4.1.2
-    ENV PYION_BP_VERSION BPv7
-
-    # =====================================================
-    # === INSTALL DEPENDENCIES
-    # =====================================================
-
-    RUN \
-        # Install basic dependencies
-        apt update && \
-        apt install -y --no-install-recommends man-db && \
-        apt install -y --no-install-recommends build-essential && \
-        apt install -y --no-install-recommends wget && \
-        apt install -y git && \
-        
-        # Install ION adependencies
-        apt install -y --no-install-recommends autotools-dev && \
-        apt install -y --no-install-recommends automake && \
-        
-        # Install Python dependencies
-        apt install -y --no-install-recommends python3-dev && \
-        apt install -y --no-install-recommends python3-setuptools && \
-
-        # Clean up (see https://www.fromlatest.io/#/ and 
-        # https://hackernoon.com/tips-to-reduce-docker-image-sizes-876095da3b34)
-        rm -rf /var/lib/apt/lists/*
-    
-    # =============================================================
-    # === DOWNLOAD, COMPILE AND BUILD ION
-    # =============================================================
-    
-    RUN \
-        cd $HOME && \
-        wget https://sourceforge.net/projects/ion-dtn/files/ion-open-source-4.1.2.tar.gz && \
-        tar -xvzf ion-open-source-4.1.2.tar.gz && \
-        cd $ION_HOME && \
-        autoheader && \
-        aclocal && \
-        autoupdate && \
-        autoconf && \
-        automake && \
-        ./configure && \
-        make && \
-        make install && \
-        ldconfig
-
-    # =============================================================
-    # === DOWNLOAD, COMPILE AND BUILD PYION
-    # =============================================================
-
-    RUN \
-        git clone --single-branch --branch v4.1.2 https://github.com/msancheznet/pyion.git $PYION_HOME && \
-        cd $PYION_HOME && \
-        python3 setup.py install && \
-        chmod -R +x $PYION_HOME
-
-    # =====================================================
-    # === OPEN BASH TERMINAL UPON START
-    # =====================================================
-
-    # Default command for the container.
-    CMD ["tail", "-f", "/dev/null"]
-
+	# =============================================================
+	# === DOWNLOAD PYION FROM GITHUB AND COMPILE IT
+	# =============================================================
+	
+	RUN git clone --single-branch --branch v4.1.3 https://github.com/msancheznet/pyion.git $PYION_HOME
+	
+	RUN \
+	   cd $PYION_HOME && \
+	   find $PYION_HOME -type f -print0 | xargs -0 dos2unix && \
+	   python3 setup.py install && \
+	   chmod -R +x $PYION_HOME
+	
+	# =====================================================
+	# === OPEN BASH TERMINAL UPON START
+	# =====================================================
+	
+	# Define default command.
+	CMD ["tail", "-f", "/dev/null"]
 
 To use this dockerfile in a host with Docker, simply run:
 
 .. code-block:: bash
     :linenos:
 
-    docker build -t pyion_bpv7:4.1.2 -f .\pyion_v412_bpv7_ubuntu.dockerfile --build_arg IMAGE_NAME=ubuntu:20.04 .
+    docker build -t pyion_bpv7:4.1.3 -f .\pyion_v413_bpv7.dockerfile --build-arg IMAGE_NAME=ubuntu:20.04 .
 
 
 Note that to install pyion, three environment variables are used:
