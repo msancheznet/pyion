@@ -257,7 +257,7 @@ setup(
                 'sphinx.html_themes': [
                     'bootstrap = sphinx_bootstrap_theme',
                 ]
-    },
+            },
     packages         = ["pyion"],
     ext_modules      = _ext_modules
 )

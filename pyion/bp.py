@@ -26,7 +26,16 @@ from pyion.constants import BpEcsEnumeration, BpCustodyEnum
 import _bp
 
 # Define all methods/vars exposed at pyion
-__all__ = ['Endpoint']
+__all__ = ['Endpoint', 'is_bpv6', 'is_bpv7']
+
+# Get version of BP used in this deployment of pyion
+bp_version = os.environ.get('PYION_BP_VERSION')
+if not bp_version:
+    raise ValueError("Environment variable PYION_BP_VERSION is missing. Set it to BPv6 or BPv7")
+if bp_version.lower() not in ['bpv7', 'bpv6']:
+	raise ValueError("Environment variable PYION_BP_VERSION must be set to BPv6 or BPv7")
+is_bpv6 = bp_version.lower() == 'bpv6'
+is_bpv7 = bp_version.lower() == 'bpv7'
 
 # ============================================================================
 # === Endpoint object
@@ -120,11 +129,11 @@ class Endpoint():
 		if chunk_size is None: chunk_size = self.chunk_size
 
 		# If this endpoint is not detained, you cannot use a retx_timer
-		if retx_timer>0 and not self.detained:
+		if retx_timer>0 and is_bpv6 and not self.detained:
 			raise ConnectionError('This endpoint is not detained. You cannot set up custodial timers.')
 
-		# In pyion v4.0.0 and beyond, BPv7 is assumed. Therefore, custody transfer is not allowed
-		if custody != BpCustodyEnum.NO_CUSTODY_REQUESTED:
+		# If using BPv7, custody transfer is not defined
+		if is_bpv7 and custody != BpCustodyEnum.NO_CUSTODY_REQUESTED:
 			raise ValueError('Custody transfer is not allowed in pyion-4.0.0+ since it is not in BPv7')
 
 		# Create call arguments
