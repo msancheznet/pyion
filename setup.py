@@ -63,8 +63,8 @@ from setuptools import setup, Extension
 import sys
 from warnings import warn
 
-__version__ = '4.1.2'
-__release__ = 'R2023a'
+__version__ = '4.1.3'
+__release__ = 'R2024a'
 
 # ========================================================================================
 # ===  Helper definitions
@@ -169,56 +169,64 @@ c_macros = [
 # ========================================================================================
 
 # Define ION management extension
-_mgmt = Extension('_mgmt',
-                include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib), str(cfdp_lib), str(ici_inc)],
-                libraries=['ici', 'bp', 'ltp', 'cfdp'],
-                library_dirs=[str(ion_lib)],
-                sources=['./pyion/_mgmt.c'],
-                extra_compile_args=compile_args,
-                define_macros=c_macros
-                )
+_mgmt = Extension(
+    '_mgmt',
+    include_dirs=[str(ion_inc), str(bp_lib), str(ltp_lib), str(cfdp_lib), str(ici_inc)],
+    libraries=['ici', 'bp', 'ltp', 'cfdp'],
+    library_dirs=[str(ion_lib)],
+    sources=['./pyion/_mgmt.c'],
+    extra_compile_args=compile_args,
+    define_macros=c_macros
+)
 
 # Define the ION-BP extension and related directories
-_bp = Extension('_bp',
-                include_dirs=[str(ion_inc)],
-                libraries=['bp', 'ici', 'ltp', 'cfdp'],
-                library_dirs=[str(ion_lib)],
-                sources=['./pyion/_bp.c',
-                './pyion/_utils.c', './pyion/base_bp.c'],
-                extra_compile_args=compile_args,
-                define_macros=c_macros
-                )
+_bp = Extension(
+    '_bp',
+    include_dirs=[str(ion_inc)],
+    libraries=['bp', 'ici', 'ltp', 'cfdp'],
+    library_dirs=[str(ion_lib), str(bp_lib)],
+    sources=[
+        './pyion/_bp.c',
+        './pyion/_utils.c', 
+        './pyion/base_bp.c'
+    ],
+    extra_compile_args=compile_args,
+    define_macros=c_macros
+)
 
 # Define the ION-CFDP extension and related directories
-_cfdp = Extension('_cfdp',
-                include_dirs=[str(ion_inc), str(cfdp_inc), str(cfdp_lib)],    
-                libraries=['cfdp', 'ici'],
-                library_dirs=[str(ion_lib), str(cfdp_lib)],
-                sources=['./pyion/_cfdp.c', './pyion/base_cfdp.c'],
-                extra_compile_args=compile_args,
-                define_macros=c_macros
-                )
+_cfdp = Extension(
+    '_cfdp',
+    include_dirs=[str(ion_inc), str(cfdp_inc), str(cfdp_lib)],    
+    libraries=['cfdp', 'ici'],
+    library_dirs=[str(ion_lib), str(cfdp_lib)],
+    sources=['./pyion/_cfdp.c', './pyion/base_cfdp.c'],
+    extra_compile_args=compile_args,
+    define_macros=c_macros
+)
 
 # Define the ION-LTP extension and related directories
-_ltp = Extension('_ltp',
-                include_dirs=[str(ion_inc), str(ltp_lib)],
-                libraries=['ltp', 'ici', 'bp', 'cfdp'],
-                library_dirs=[str(ion_lib)],
-                sources=['./pyion/_ltp.c',
-                './pyion/_utils.c', './pyion/base_ltp.c'],
-                extra_compile_args=compile_args,
-                define_macros=c_macros
-                )
+_ltp = Extension(
+    '_ltp',
+    include_dirs=[str(ion_inc), str(ltp_lib)],
+    libraries=['ltp', 'ici', 'bp', 'cfdp'],
+    library_dirs=[str(ion_lib)],
+    sources=['./pyion/_ltp.c',
+    './pyion/_utils.c', './pyion/base_ltp.c'],
+    extra_compile_args=compile_args,
+    define_macros=c_macros
+)
 
 # Define the ION memory extension and related directories
-_mem = Extension('_mem',
-                include_dirs=[str(ion_inc)],
-                libraries=['ici', 'bp', 'cfdp', 'ltp'],        # bp is required
-                library_dirs=[str(ion_lib)],
-                sources=['./pyion/_mem.c', './pyion/base_mem.c'],
-                extra_compile_args=compile_args,
-                define_macros=c_macros
-                )
+_mem = Extension(
+    '_mem',
+    include_dirs=[str(ion_inc)],
+    libraries=['ici', 'bp', 'cfdp', 'ltp'],        # bp is required
+    library_dirs=[str(ion_lib)],
+    sources=['./pyion/_mem.c', './pyion/base_mem.c'],
+    extra_compile_args=compile_args,
+    define_macros=c_macros
+)
 
 # Define the extensions to compile
 _ext_modules = [_bp, _cfdp, _ltp, _mem]

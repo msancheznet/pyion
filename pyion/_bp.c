@@ -165,7 +165,6 @@ PyMODINIT_FUNC PyInit__bp(void)
     PyModule_AddIntMacro(module, BP_MINIMUM_LATENCY);
     PyModule_AddIntMacro(module, BP_BEST_EFFORT);
     PyModule_AddIntMacro(module, BP_RELIABLE);
-    PyModule_AddIntMacro(module, BP_RELIABLE_STREAMING);
     PyModule_AddIntConstant(module, "NoCustodyRequested", NoCustodyRequested);
     PyModule_AddIntConstant(module, "SourceCustodyOptional", SourceCustodyOptional);
     PyModule_AddIntConstant(module, "SourceCustodyRequired", SourceCustodyRequired);

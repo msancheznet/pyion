@@ -60,12 +60,10 @@ class BpEcsEnumeration(IntEnum):
         - BP_MINIMUM_LATENCY: Forward bundle on all routes
         - BP_BEST_EFFORT: Send using an unreliable convergence layer
         - BP_RELIABLE: Send using a reliable convergence layer
-        - BP_RELIABLE_STREAMING: BP_BEST_EFFORT | BP_RELIABLE
     """
     BP_MINIMUM_LATENCY    = _bp.BP_MINIMUM_LATENCY  
     BP_BEST_EFFORT        = _bp.BP_BEST_EFFORT      
     BP_RELIABLE           = _bp.BP_RELIABLE         
-    BP_RELIABLE_STREAMING = _bp.BP_RELIABLE_STREAMING
 
 @unique
 class BpReportsEnum(IntEnum):
