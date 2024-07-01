@@ -96,7 +96,7 @@ that this file assumes that ION and pyion 4.1.3 are being installed. It is provi
 .. code-block:: dockerfile
     :linenos:
 
-    # Define base image and pull it
+    	# Define base image and pull it
 	ARG IMAGE_NAME=ubuntu:20.04
 	FROM $IMAGE_NAME
 	
