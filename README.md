@@ -1,12 +1,7 @@
-Introduction
-------------
+THIS IS REPOSITOR IS NOW DEPRECATED AND WILL NO LONGER BE UPDATED.
+------------------------------------------------------------------
 
-This repository contains the source code of **pyion**, a Python extension for the Interplanetary Overlay Network.
-Pyion roughly follows the release schedule of ION and places the relevant codebase in separate branches
-(e.g., for ION-3.7.0, checkout branch v3.7.0).
-
-The full pyion documentation can be found at https://pyion.readthedocs.io/en/latest/
-
+Pyion has been moved to https://github.com/nasa-jpl/pyion.
 
 License Terms
 -------------
